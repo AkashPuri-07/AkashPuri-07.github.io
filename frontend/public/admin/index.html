@@ -628,54 +628,50 @@
         return String(s || '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[ch]));
       }
 
-      // ---------------- Boot ----------------
-      (async function boot() {
-        el('googleLoginBtn').addEventListener('click', startGoogleLogin);
+      // ---------------- Messages ----------------
+      function relativeTime(iso) {
+        const t = new Date(iso).getTime();
+        const diff = Date.now() - t;
+        const mins = Math.floor(diff / 60000);
+        if (mins < 1) return 'just now';
+        if (mins < 60) return `${mins}m ago`;
+        const hrs = Math.floor(mins / 60);
+        if (hrs < 24) return `${hrs}h ago`;
+        const days = Math.floor(hrs / 24);
+        if (days < 30) return `${days}d ago`;
+        return new Date(iso).toLocaleDateString();
+      }
 
-        const hadSessionId = await processSessionIdFromHash();
-        if (hadSessionId) {
-          // Poll /me now that the cookie should be set
+      async function loadMessages() {
+        const list = el('msgList');
+        list.innerHTML = '<div class="empty">Loading…</div>';
+        const r = await fetch(`${API}/admin/messages`, { credentials: 'include' });
+        if (!r.ok) { list.innerHTML = '<div class="empty">Failed to load messages.</div>'; return; }
+        state.messages = await r.json();
+        renderMessages();
+        updateUnreadBadge();
+      }
+
+      function updateUnreadBadge() {
+        const unread = state.messages.filter(m => !m.read).length;
+        const badge = el('msgBadge');
+        badge.textContent = unread;
+        badge.classList.toggle('zero', unread === 0);
+      }
+
+      function renderMessages() {
+        const list = el('msgList');
+        if (!state.messages.length) {
+          list.innerHTML = '<div class="empty">No messages yet. When someone submits the contact form, they will appear here.</div>';
+          return;
         }
-        const me = await fetchMe();
-        if (!me) { showLogin(hadSessionId ? undefined : undefined); return; }
-        state.user = me;
-        showDashboard(me);
-
-        el('newPostBtn').addEventListener('click', newPost);
-        el('logoutBtn').addEventListener('click', logout);
-        el('editorForm').addEventListener('submit', savePost);
-        el('cancelBtn').addEventListener('click', () => {
-          state.selectedId = null;
-          el('editorForm').classList.add('hidden');
-          el('editorEmpty').classList.remove('hidden');
-          el('editorTitle').textContent = 'Select a post to edit';
-          renderList();
-        });
-        el('deleteBtn').addEventListener('click', deletePost);
-
-        // Auto-slug from title on new post
-        el('fldTitle').addEventListener('blur', () => {
-          if (!state.selectedId && !el('fldSlug').value.trim()) {
-            el('fldSlug').value = slugify(el('fldTitle').value);
-          }
-        });
-        el('fldPublished').addEventListener('change', (e) => {
-          el('publishStatus').textContent = e.target.checked ? '— live' : '— draft';
-        });
-
-        // Tab switcher + messages
-        el('tabJournal').addEventListener('click', () => switchTab('journal'));
-        el('tabMessages').addEventListener('click', () => switchTab('messages'));
-        el('refreshMsgsBtn').addEventListener('click', loadMessages);
-
-        await loadPosts();
-        await pollUnreadBadge();
-        setInterval(pollUnreadBadge, 30000);
-      })();
-    </script>
-  </body>
-</html>
-lass="msg-email" href="mailto:${encodeURIComponent(m.email)}?subject=Re:%20your%20message">${escapeHTML(m.email)}</a>
+        list.innerHTML = state.messages.map(m => `
+          <div class="msg-item ${m.read ? 'read' : 'unread'}" data-id="${m.id}" data-testid="msg-item-${m.id}">
+            <div class="msg-head">
+              <div style="min-width:0;flex:1;">
+                <span class="unread-dot"></span>
+                <span class="msg-name">${escapeHTML(m.name)}</span>
+                &nbsp; <a class="msg-email" href="mailto:${encodeURIComponent(m.email)}?subject=Re:%20your%20message">${escapeHTML(m.email)}</a>
               </div>
               <div style="display:flex;align-items:center;gap:10px;">
                 ${m.email_sent
@@ -696,7 +692,7 @@ lass="msg-email" href="mailto:${encodeURIComponent(m.email)}?subject=Re:%20your%
         `).join('');
 
         list.querySelectorAll('button[data-act]').forEach(btn => {
-          btn.addEventListener('click', async (e) => {
+          btn.addEventListener('click', async () => {
             const id = btn.dataset.id;
             const act = btn.dataset.act;
             if (act === 'toggle-read') {
@@ -782,7 +778,14 @@ lass="msg-email" href="mailto:${encodeURIComponent(m.email)}?subject=Re:%20your%
           el('publishStatus').textContent = e.target.checked ? '— live' : '— draft';
         });
 
+        // Tab switcher + messages
+        el('tabJournal').addEventListener('click', () => switchTab('journal'));
+        el('tabMessages').addEventListener('click', () => switchTab('messages'));
+        el('refreshMsgsBtn').addEventListener('click', loadMessages);
+
         await loadPosts();
+        await pollUnreadBadge();
+        setInterval(pollUnreadBadge, 30000);
       })();
     </script>
   </body>
