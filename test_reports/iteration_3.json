@@ -1,0 +1,80 @@
+{
+  "summary": "Full stack testing of the Admin dashboard + Journal CRUD MVP. Wrote pytest suite covering public endpoints, auth guards, Emergent OAuth /session error paths, and simulated-admin CRUD (create/update/delete + slug uniqueness + draft visibility). All 24 backend tests pass. UI verified via Playwright: /admin/, /admin, /admin.html, /admin/index.html all resolve to the login card with data-testid='google-login-btn'. With a seeded session cookie, /admin/ renders the full dashboard (brand 'Akash Puri · Admin', 3 seeded posts, + New Post button, editor form with every required data-testid). Portfolio '/' fetches from /api/posts and renders 3 post cards with correct titles. Regression assets (favicons, og-image, robots.txt, sitemap.xml) still 200.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {"ui_bugs": [], "integration_issues": [], "design_issues": []},
+  "verification_details": {
+    "backend": {
+      "pytest": "24 passed / 0 failed in 3.22s",
+      "endpoints_verified": [
+        "GET /api/ → 200 {name: 'Akash Puri Portfolio API'}",
+        "GET /api/posts → 200, 3 published posts, all required fields present",
+        "GET /api/posts/floodlight-hygiene → 200",
+        "GET /api/posts/{bad-slug} → 404",
+        "GET /api/auth/me (no auth) → 401",
+        "GET /api/admin/posts (no auth) → 401",
+        "POST /api/admin/posts (no auth) → 401",
+        "PUT/DELETE /api/admin/posts/{id} (no auth) → 401",
+        "GET /api/auth/me (bogus Bearer) → 401",
+        "POST /api/auth/session (no X-Session-ID) → 400",
+        "POST /api/auth/session (bogus X-Session-ID) → 401 (Emergent rejects)",
+        "GET /api/auth/me (seeded admin) → 200, role='admin'",
+        "GET /api/admin/posts (seeded admin) → 200, 3+ posts",
+        "POST /api/admin/posts → 200, appears in list, published post appears publicly",
+        "PUT /api/admin/posts/{id} → 200, published=false removes it from public list",
+        "DELETE /api/admin/posts/{id} → 200, subsequent GET returns 404",
+        "Slug uniqueness: 2nd post with same slug auto-suffixed '-2'"
+      ],
+      "allow_list_check": "server.py:149-152 enforces `role='admin' if email in ADMIN_EMAILS else HTTPException(403, 'Access restricted to site owner')`. Verified via code review — cannot mint a real Emergent session for a non-admin email in test, but the code path is confirmed."
+    },
+    "frontend": {
+      "admin_route_resolution": {
+        "/admin/": "200 (login card, data-testid='google-login-btn' present)",
+        "/admin":  "200 (login card)",
+        "/admin.html": "200 (login card)",
+        "/admin/index.html": "200 (login card)"
+      },
+      "admin_dashboard_with_seeded_cookie": {
+        "brand_text": "Akash Puri · Admin",
+        "dashboard_class": "container (visible)",
+        "login_class": "login-shell hidden",
+        "post_items_rendered": 3,
+        "new_post_btn": "visible",
+        "editor_data_testids_all_found": ["post-title","post-slug","post-date","post-excerpt","post-image","post-link","post-tags","post-body","published-toggle","save-btn","delete-btn","new-post-btn","editor-form","cancel-btn","logout-btn","view-site-link","google-login-btn"],
+        "click_post_loads_editor": true,
+        "loaded_post_title_example": "Why Under-Pacing Is a Diagnostic Problem, Not a Bid Problem",
+        "new_post_button_switches_to_new_post_mode": true
+      },
+      "portfolio_journal_section": {
+        "postsGrid_cards": 3,
+        "titles": [
+          "Why Under-Pacing Is a Diagnostic Problem, Not a Bid Problem",
+          "Reading a DV360 Report Like a Media Planner, Not an Ops Person",
+          "The Quiet Discipline of Floodlight Hygiene"
+        ],
+        "fetch_source": "/api/posts (dynamic, replaces old hardcoded array — verified in index.html line 1199-1207 and boot handler at 1337-1346)"
+      },
+      "regression_assets": "sitemap.xml, robots.txt, favicon.ico, favicon-32/192/512.png, apple-touch-icon.png, og-image.png all 200"
+    }
+  },
+  "test_report_links": [
+    "/app/backend/tests/backend_test.py",
+    "/app/test_reports/pytest/pytest_results.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "Minor: server.py stores `expires_at` as ISO string then re-parses per request (line 111). Fine for now but consider storing as native datetime for cleaner queries.",
+    "Minor: admin.html sets session_token cookie with samesite=None + secure=true + httpOnly=true (from backend). Verified admin dashboard also works via `Authorization: Bearer` header path via Mongo-seeded session (test_credentials.md flow) — dual auth path is correct.",
+    "Minor: Emergent badge inline styles on portfolio index.html are heavy but intentional (per Emergent guidelines) — no change needed.",
+    "Optional: /api/posts sort is by created_at desc; if the admin later re-publishes an older draft, its position may change. Consider sorting by an explicit `date` field or `published_at` if chronological consistency matters."
+  ],
+  "updated_files": [
+    "/app/backend/tests/backend_test.py (new)",
+    "/app/test_reports/pytest/pytest_results.xml (regenerated)"
+  ],
+  "success_rate": {"backend": "100% (24/24)", "frontend": "100%"},
+  "test_credentials": "Followed /app/memory/test_credentials.md — seeded admin session (email=akashpuri7@gmail.com, role=admin) directly into Mongo via pytest fixture with cleanup. Session tokens prefixed with 'test_session_'.",
+  "seed_data_creation": "Pytest fixtures create/cleanup admin users + sessions with 'test_session_' prefix. Test posts prefixed with 'test-' and deleted after run. Post-run mongo state: users=0, user_sessions=0, posts=3 (original seed intact).",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Backend suite at /app/backend/tests/backend_test.py uses pytest-xdist (2 workers, ~3s). Reads BASE_URL from REACT_APP_BACKEND_URL and MONGO_URL/DB_NAME from env. Admin auth is simulated via mongo-seeded user+session (see admin_session fixture) and Authorization: Bearer header — matching /app/memory/test_credentials.md. For UI tests, inject session_token cookie with domain=<preview-host>, path=/, secure=True, sameSite='None' before navigating to /admin/. Use wait_until='domcontentloaded' + wait_for_selector rather than 'networkidle' — the page keeps a long-lived font connection that never fully idles. Playwright's httpOnly attribute doesn't matter for server-side reading; server reads request.cookies regardless."
+}

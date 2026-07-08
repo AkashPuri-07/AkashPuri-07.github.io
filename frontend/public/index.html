@@ -1150,30 +1150,9 @@
       ];
 
       // ► ARTICLES / JOURNAL POSTS
-      // To add a new post in the future, just append an object to this array.
-      const portfolioPosts = [
-        {
-          title: 'Why Under-Pacing Is a Diagnostic Problem, Not a Bid Problem',
-          date: 'March 12, 2025',
-          excerpt: 'Everyone reaches for bid multipliers first. In most cases, the fix is upstream — in inventory, frequency caps or creative rotation. Here\'s the audit I run before I touch a single bid.',
-          imageURL: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=900&auto=format&fit=crop&q=75',
-          postLink: '#'
-        },
-        {
-          title: 'Reading a DV360 Report Like a Media Planner, Not an Ops Person',
-          date: 'February 4, 2025',
-          excerpt: 'The default columns tell you the campaign ran. The right columns tell you whether it worked. A short guide to the seven views I keep on my second monitor.',
-          imageURL: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=900&auto=format&fit=crop&q=75',
-          postLink: '#'
-        },
-        {
-          title: 'The Quiet Discipline of Floodlight Hygiene',
-          date: 'January 18, 2025',
-          excerpt: 'Bad tags don\'t announce themselves. They just quietly attribute the wrong conversions to the wrong campaigns until someone gets fired. A short primer on keeping your tracking house in order.',
-          imageURL: 'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=900&auto=format&fit=crop&q=75',
-          postLink: '#'
-        }
-      ];
+      // Posts are managed via the admin dashboard at /admin.
+      // They are fetched at page load from /api/posts (public list of published posts only).
+      let portfolioPosts = [];
 
       /* ============================================================
          RENDERERS
@@ -1198,8 +1177,12 @@
 
       function renderPosts() {
         const grid = document.getElementById('postsGrid');
+        if (!portfolioPosts.length) {
+          grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:60px; color:var(--ink-3);">New pieces coming soon.</div>';
+          return;
+        }
         grid.innerHTML = portfolioPosts.map(post => `
-          <a class="post-card reveal" href="${post.postLink}" data-tilt data-tilt-max="5" data-tilt-speed="600" data-tilt-glare data-tilt-max-glare="0.15">
+          <a class="post-card reveal" href="${post.postLink || '#'}" data-tilt data-tilt-max="5" data-tilt-speed="600" data-tilt-glare data-tilt-max-glare="0.15">
             <div class="post-media">
               <img src="${post.imageURL}" alt="${post.title}" loading="lazy" />
             </div>
@@ -1211,6 +1194,16 @@
             </div>
           </a>
         `).join('');
+      }
+
+      async function fetchPosts() {
+        try {
+          const r = await fetch('/api/posts');
+          if (!r.ok) return;
+          portfolioPosts = await r.json();
+        } catch (e) {
+          console.warn('Failed to fetch posts:', e);
+        }
       }
 
       /* ============================================================
@@ -1341,9 +1334,10 @@
       /* ============================================================
          BOOT
          ============================================================ */
-      document.addEventListener('DOMContentLoaded', () => {
+      document.addEventListener('DOMContentLoaded', async () => {
         document.getElementById('year').textContent = new Date().getFullYear();
         renderProjects();
+        await fetchPosts();
         renderPosts();
         initFilters();
         initContactForm();

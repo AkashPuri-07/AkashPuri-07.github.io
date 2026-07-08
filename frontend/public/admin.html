@@ -1,0 +1,584 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>Admin — Akash Puri</title>
+    <link rel="icon" href="/favicon.ico" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg: #f6f4ef;
+        --ink: #14130f;
+        --ink-2: #4a4740;
+        --ink-3: #8a857b;
+        --line: rgba(20,19,15,0.08);
+        --line-strong: rgba(20,19,15,0.14);
+        --gold: #b89968;
+        --gold-deep: #8f7443;
+        --danger: #b23a3a;
+        --success: #4a7c59;
+        --radius: 14px;
+        --ease: cubic-bezier(0.16, 1, 0.3, 1);
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--ink);
+        font-family: 'Inter', system-ui, sans-serif;
+        font-size: 15px;
+        line-height: 1.55;
+        min-height: 100vh;
+      }
+      h1, h2, h3 { font-family: 'Fraunces', serif; font-weight: 500; letter-spacing: -0.02em; margin: 0; }
+      h1 { font-size: 2.1rem; }
+      h2 { font-size: 1.4rem; }
+      a { color: var(--gold-deep); text-decoration: none; }
+      a:hover { text-decoration: underline; }
+
+      .container { max-width: 1180px; margin: 0 auto; padding: 32px; }
+
+      .topbar {
+        display: flex; align-items: center; justify-content: space-between;
+        padding-bottom: 24px; border-bottom: 1px solid var(--line); margin-bottom: 32px;
+      }
+      .brand { display: flex; align-items: center; gap: 12px; font-family: 'Fraunces', serif; font-weight: 600; font-size: 1.1rem; }
+      .brand .dot { width: 10px; height: 10px; border-radius: 50%; background: linear-gradient(135deg, #d4b47a, #8f7443); }
+      .user-chip {
+        display: flex; align-items: center; gap: 10px;
+        padding: 6px 14px 6px 6px;
+        background: #fff;
+        border: 1px solid var(--line); border-radius: 999px;
+      }
+      .user-chip img { width: 28px; height: 28px; border-radius: 50%; }
+      .user-chip .u-name { font-size: 0.88rem; font-weight: 500; }
+
+      .btn {
+        display: inline-flex; align-items: center; gap: 8px;
+        padding: 10px 18px; border-radius: 999px;
+        border: 1px solid var(--line-strong); background: #fff;
+        color: var(--ink); font: inherit; font-size: 0.88rem; font-weight: 500;
+        cursor: pointer; transition: all 0.25s var(--ease);
+      }
+      .btn:hover { border-color: var(--gold-deep); color: var(--gold-deep); }
+      .btn.primary { background: var(--ink); color: #f8f5ec; border-color: var(--ink); }
+      .btn.primary:hover { background: var(--gold-deep); border-color: var(--gold-deep); color: #fff; }
+      .btn.danger { color: var(--danger); border-color: rgba(178, 58, 58, 0.3); }
+      .btn.danger:hover { background: var(--danger); color: #fff; border-color: var(--danger); }
+      .btn.ghost { background: transparent; border-color: transparent; }
+      .btn.ghost:hover { background: rgba(20,19,15,0.05); }
+
+      /* ==== Login ==== */
+      .login-shell {
+        min-height: 100vh;
+        display: grid; place-items: center;
+        padding: 32px;
+      }
+      .login-card {
+        max-width: 440px; width: 100%;
+        background: #fff;
+        border: 1px solid var(--line);
+        border-radius: 20px;
+        padding: 48px 40px;
+        box-shadow: 0 24px 60px -30px rgba(120,100,60,0.25);
+        text-align: center;
+      }
+      .login-card .eyebrow {
+        display: inline-flex; align-items: center; gap: 10px;
+        font-size: 0.72rem; letter-spacing: 0.22em; text-transform: uppercase;
+        color: var(--gold-deep); font-weight: 600; margin-bottom: 24px;
+      }
+      .login-card .eyebrow::before { content: ''; width: 24px; height: 1px; background: var(--gold-deep); }
+      .login-card h1 { font-size: 1.8rem; margin-bottom: 12px; }
+      .login-card p { color: var(--ink-2); margin: 0 0 32px; font-size: 0.95rem; }
+      .google-btn {
+        width: 100%; padding: 14px 20px; border-radius: 12px;
+        background: var(--ink); color: #f8f5ec; border: none;
+        font: inherit; font-weight: 500; cursor: pointer;
+        display: flex; align-items: center; justify-content: center; gap: 12px;
+        transition: all 0.25s var(--ease);
+      }
+      .google-btn:hover { background: var(--gold-deep); transform: translateY(-1px); }
+      .google-btn svg { width: 18px; height: 18px; }
+      .login-note { margin-top: 24px; font-size: 0.8rem; color: var(--ink-3); }
+      .error-banner {
+        background: rgba(178,58,58,0.08);
+        border: 1px solid rgba(178,58,58,0.25);
+        color: var(--danger);
+        padding: 12px 16px; border-radius: 10px;
+        font-size: 0.88rem;
+        margin-bottom: 20px;
+      }
+
+      /* ==== Dashboard ==== */
+      .layout { display: grid; grid-template-columns: 1fr 1.5fr; gap: 32px; }
+      @media (max-width: 960px) { .layout { grid-template-columns: 1fr; } }
+
+      .panel {
+        background: #fff;
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        padding: 24px;
+      }
+      .panel-head {
+        display: flex; align-items: center; justify-content: space-between;
+        margin-bottom: 20px;
+      }
+      .panel-title { font-family: 'Fraunces', serif; font-size: 1.25rem; font-weight: 600; }
+
+      .post-list { display: flex; flex-direction: column; gap: 8px; max-height: 65vh; overflow-y: auto; padding-right: 4px; }
+      .post-item {
+        padding: 14px 16px;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        cursor: pointer;
+        transition: all 0.2s var(--ease);
+        background: #fff;
+      }
+      .post-item:hover { border-color: var(--gold-deep); }
+      .post-item.active { border-color: var(--gold-deep); background: rgba(184,153,104,0.06); }
+      .post-item .row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+      .post-item .p-title { font-weight: 600; font-size: 0.98rem; }
+      .post-item .p-meta { font-size: 0.78rem; color: var(--ink-3); margin-top: 4px; letter-spacing: 0.04em; }
+      .status-pill {
+        font-size: 0.68rem; padding: 3px 10px; border-radius: 999px;
+        letter-spacing: 0.08em; text-transform: uppercase; font-weight: 600;
+      }
+      .status-pill.published { background: rgba(74,124,89,0.12); color: var(--success); }
+      .status-pill.draft     { background: rgba(20,19,15,0.06); color: var(--ink-2); }
+
+      .empty { padding: 32px; text-align: center; color: var(--ink-3); font-size: 0.9rem; }
+
+      /* Editor form */
+      .field { margin-bottom: 18px; }
+      .field label {
+        display: block; font-size: 0.72rem; letter-spacing: 0.14em;
+        text-transform: uppercase; color: var(--ink-3); font-weight: 600; margin-bottom: 6px;
+      }
+      .field input, .field textarea, .field select {
+        width: 100%; padding: 11px 14px;
+        background: #fff; border: 1px solid var(--line-strong);
+        border-radius: 10px;
+        font: inherit; font-size: 0.94rem; color: var(--ink);
+        transition: all 0.2s var(--ease); font-family: 'Inter', sans-serif;
+      }
+      .field textarea { resize: vertical; min-height: 90px; font-family: 'Inter', 'SFMono-Regular', monospace; }
+      .field textarea.body-input { min-height: 240px; font-family: 'Inter', monospace; font-size: 0.9rem; }
+      .field input:focus, .field textarea:focus, .field select:focus {
+        outline: none; border-color: var(--gold-deep);
+        box-shadow: 0 0 0 3px rgba(184,153,104,0.15);
+      }
+      .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+      @media (max-width: 640px) { .row-2 { grid-template-columns: 1fr; } }
+
+      .toggle-row {
+        display: flex; align-items: center; gap: 12px;
+        padding: 12px 16px; background: rgba(20,19,15,0.03);
+        border-radius: 10px; margin-bottom: 18px;
+      }
+      .toggle-row label { font-weight: 500; color: var(--ink); font-size: 0.95rem; margin: 0; text-transform: none; letter-spacing: normal; }
+      .switch { position: relative; width: 42px; height: 24px; }
+      .switch input { opacity: 0; width: 0; height: 0; }
+      .switch .slider {
+        position: absolute; inset: 0; background: var(--line-strong);
+        border-radius: 999px; cursor: pointer; transition: 0.25s var(--ease);
+      }
+      .switch .slider::before {
+        content: ''; position: absolute; left: 3px; top: 3px;
+        width: 18px; height: 18px; background: #fff; border-radius: 50%;
+        transition: 0.25s var(--ease);
+      }
+      .switch input:checked + .slider { background: var(--gold-deep); }
+      .switch input:checked + .slider::before { transform: translateX(18px); }
+
+      .editor-actions { display: flex; gap: 10px; flex-wrap: wrap; padding-top: 8px; border-top: 1px solid var(--line); margin-top: 16px; padding-top: 20px; }
+      .editor-actions .spacer { flex: 1; }
+
+      .toast {
+        position: fixed; bottom: 24px; right: 24px;
+        padding: 14px 20px; border-radius: 10px;
+        background: var(--ink); color: #f8f5ec;
+        box-shadow: 0 12px 32px -8px rgba(0,0,0,0.3);
+        font-size: 0.9rem;
+        opacity: 0; transform: translateY(10px);
+        transition: all 0.3s var(--ease); pointer-events: none;
+        z-index: 100;
+      }
+      .toast.show { opacity: 1; transform: translateY(0); }
+      .toast.error { background: var(--danger); }
+
+      .hidden { display: none !important; }
+
+      .helper-text { font-size: 0.78rem; color: var(--ink-3); margin-top: 4px; }
+    </style>
+  </head>
+  <body>
+    <!-- LOGIN VIEW -->
+    <div id="loginView" class="login-shell hidden">
+      <div class="login-card">
+        <div class="eyebrow">Admin Console</div>
+        <h1>Sign in to manage your Journal</h1>
+        <p>Only the site owner can sign in. Access is restricted to the admin allow-list.</p>
+        <div id="loginError" class="error-banner hidden"></div>
+        <button class="google-btn" id="googleLoginBtn" data-testid="google-login-btn">
+          <svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+            <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+            <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+            <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+            <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+          </svg>
+          Continue with Google
+        </button>
+        <p class="login-note">← <a href="/">back to portfolio</a></p>
+      </div>
+    </div>
+
+    <!-- DASHBOARD VIEW -->
+    <div id="dashboardView" class="container hidden">
+      <div class="topbar">
+        <div class="brand">
+          <span class="dot"></span>
+          <span>Akash Puri · Admin</span>
+        </div>
+        <div style="display:flex; gap:12px; align-items:center;">
+          <a href="/" class="btn ghost" data-testid="view-site-link">View site ↗</a>
+          <div class="user-chip">
+            <img id="userAvatar" alt="" />
+            <span class="u-name" id="userName"></span>
+          </div>
+          <button class="btn" id="logoutBtn" data-testid="logout-btn">Logout</button>
+        </div>
+      </div>
+
+      <div class="layout">
+        <!-- List panel -->
+        <div class="panel">
+          <div class="panel-head">
+            <div class="panel-title">Journal Posts</div>
+            <button class="btn primary" id="newPostBtn" data-testid="new-post-btn">+ New Post</button>
+          </div>
+          <div class="post-list" id="postList">
+            <div class="empty">Loading…</div>
+          </div>
+        </div>
+
+        <!-- Editor panel -->
+        <div class="panel">
+          <div class="panel-head">
+            <div class="panel-title" id="editorTitle">Select a post to edit</div>
+          </div>
+          <form id="editorForm" class="hidden" data-testid="editor-form">
+            <div class="toggle-row">
+              <label class="switch"><input type="checkbox" id="fldPublished" data-testid="published-toggle" /><span class="slider"></span></label>
+              <label for="fldPublished">Published <span class="helper-text" id="publishStatus" style="display:inline; margin-left:4px;">— draft</span></label>
+            </div>
+
+            <div class="field">
+              <label for="fldTitle">Title</label>
+              <input type="text" id="fldTitle" name="title" required data-testid="post-title" />
+            </div>
+
+            <div class="row-2">
+              <div class="field">
+                <label for="fldSlug">Slug (URL-safe)</label>
+                <input type="text" id="fldSlug" name="slug" required pattern="[a-z0-9\-]+" data-testid="post-slug" />
+                <div class="helper-text">Lowercase letters, numbers, hyphens only</div>
+              </div>
+              <div class="field">
+                <label for="fldDate">Date</label>
+                <input type="text" id="fldDate" name="date" placeholder="e.g. March 12, 2025" required data-testid="post-date" />
+              </div>
+            </div>
+
+            <div class="field">
+              <label for="fldExcerpt">Excerpt</label>
+              <textarea id="fldExcerpt" name="excerpt" rows="2" data-testid="post-excerpt"></textarea>
+            </div>
+
+            <div class="field">
+              <label for="fldImage">Image URL</label>
+              <input type="text" id="fldImage" name="imageURL" placeholder="https://…" data-testid="post-image" />
+            </div>
+
+            <div class="field">
+              <label for="fldLink">Post Link</label>
+              <input type="text" id="fldLink" name="postLink" placeholder="Full article URL or #" data-testid="post-link" />
+            </div>
+
+            <div class="field">
+              <label for="fldTags">Tags (comma-separated)</label>
+              <input type="text" id="fldTags" name="tags" placeholder="DV360, Pacing" data-testid="post-tags" />
+            </div>
+
+            <div class="field">
+              <label for="fldBody">Body (markdown)</label>
+              <textarea id="fldBody" name="body" class="body-input" data-testid="post-body"></textarea>
+            </div>
+
+            <div class="editor-actions">
+              <button type="button" class="btn danger" id="deleteBtn" data-testid="delete-btn">Delete</button>
+              <div class="spacer"></div>
+              <button type="button" class="btn" id="cancelBtn" data-testid="cancel-btn">Cancel</button>
+              <button type="submit" class="btn primary" id="saveBtn" data-testid="save-btn">Save changes</button>
+            </div>
+          </form>
+          <div id="editorEmpty" class="empty">
+            Pick a post from the list or create a new one to begin editing.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="toast" class="toast"></div>
+
+    <script>
+      // REMINDER: DO NOT HARDCODE THE URL, OR ADD ANY FALLBACKS OR REDIRECT URLS, THIS BREAKS THE AUTH
+      const API = '/api';
+      const state = { user: null, posts: [], selectedId: null };
+
+      const el = (id) => document.getElementById(id);
+      const showToast = (msg, isError = false) => {
+        const t = el('toast');
+        t.textContent = msg;
+        t.classList.toggle('error', isError);
+        t.classList.add('show');
+        setTimeout(() => t.classList.remove('show'), 3000);
+      };
+
+      // ---------------- Auth ----------------
+      async function fetchMe() {
+        const r = await fetch(`${API}/auth/me`, { credentials: 'include' });
+        if (!r.ok) return null;
+        return r.json();
+      }
+
+      async function processSessionIdFromHash() {
+        const hash = window.location.hash || '';
+        if (!hash.includes('session_id=')) return false;
+        const params = new URLSearchParams(hash.replace(/^#/, ''));
+        const sessionId = params.get('session_id');
+        if (!sessionId) return false;
+
+        const r = await fetch(`${API}/auth/session`, {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'X-Session-ID': sessionId },
+        });
+        // Clean the URL regardless of outcome
+        history.replaceState(null, '', window.location.pathname);
+        if (!r.ok) {
+          const body = await r.json().catch(() => ({ detail: 'Login failed' }));
+          showLogin(body.detail || 'Login failed');
+          return true;
+        }
+        return true;
+      }
+
+      function startGoogleLogin() {
+        // REMINDER: DO NOT HARDCODE THE URL, OR ADD ANY FALLBACKS OR REDIRECT URLS, THIS BREAKS THE AUTH
+        const redirectUrl = window.location.origin + window.location.pathname; // return to /admin
+        window.location.href = `https://auth.emergentagent.com/?redirect=${encodeURIComponent(redirectUrl)}`;
+      }
+
+      async function logout() {
+        await fetch(`${API}/auth/logout`, { method: 'POST', credentials: 'include' });
+        state.user = null;
+        showLogin();
+      }
+
+      function showLogin(errorMsg) {
+        el('dashboardView').classList.add('hidden');
+        el('loginView').classList.remove('hidden');
+        const err = el('loginError');
+        if (errorMsg) { err.textContent = errorMsg; err.classList.remove('hidden'); }
+        else { err.classList.add('hidden'); }
+      }
+      function showDashboard(user) {
+        el('loginView').classList.add('hidden');
+        el('dashboardView').classList.remove('hidden');
+        el('userName').textContent = user.name || user.email;
+        el('userAvatar').src = user.picture || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name || user.email)}&background=b89968&color=fff`;
+      }
+
+      // ---------------- Posts ----------------
+      async function loadPosts() {
+        const list = el('postList');
+        list.innerHTML = '<div class="empty">Loading…</div>';
+        const r = await fetch(`${API}/admin/posts`, { credentials: 'include' });
+        if (!r.ok) {
+          list.innerHTML = '<div class="empty">Failed to load posts.</div>';
+          return;
+        }
+        state.posts = await r.json();
+        renderList();
+      }
+
+      function renderList() {
+        const list = el('postList');
+        if (!state.posts.length) {
+          list.innerHTML = '<div class="empty">No posts yet — create your first one.</div>';
+          return;
+        }
+        list.innerHTML = state.posts.map(p => `
+          <div class="post-item ${state.selectedId === p.id ? 'active' : ''}" data-id="${p.id}" data-testid="post-item-${p.slug}">
+            <div class="row">
+              <div style="min-width:0; flex:1;">
+                <div class="p-title" style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${escapeHTML(p.title)}</div>
+                <div class="p-meta">${escapeHTML(p.date)} · ${p.tags.length ? p.tags.map(escapeHTML).join(', ') : 'no tags'}</div>
+              </div>
+              <span class="status-pill ${p.published ? 'published' : 'draft'}">${p.published ? 'Live' : 'Draft'}</span>
+            </div>
+          </div>
+        `).join('');
+        list.querySelectorAll('.post-item').forEach(node => {
+          node.addEventListener('click', () => selectPost(node.dataset.id));
+        });
+      }
+
+      function slugify(s) {
+        return s.toLowerCase()
+          .trim()
+          .replace(/[^a-z0-9\s-]/g, '')
+          .replace(/\s+/g, '-')
+          .replace(/-+/g, '-');
+      }
+
+      function newPost() {
+        state.selectedId = null;
+        el('editorEmpty').classList.add('hidden');
+        el('editorForm').classList.remove('hidden');
+        el('editorTitle').textContent = 'New post';
+        el('deleteBtn').classList.add('hidden');
+        setForm({ title: '', slug: '', date: new Date().toLocaleDateString('en-US', { year:'numeric', month:'long', day:'numeric' }), excerpt: '', body: '', imageURL: '', postLink: '#', tags: [], published: false });
+        renderList();
+      }
+
+      function selectPost(id) {
+        const p = state.posts.find(x => x.id === id);
+        if (!p) return;
+        state.selectedId = id;
+        el('editorEmpty').classList.add('hidden');
+        el('editorForm').classList.remove('hidden');
+        el('editorTitle').textContent = 'Edit post';
+        el('deleteBtn').classList.remove('hidden');
+        setForm(p);
+        renderList();
+      }
+
+      function setForm(p) {
+        el('fldTitle').value = p.title || '';
+        el('fldSlug').value = p.slug || '';
+        el('fldDate').value = p.date || '';
+        el('fldExcerpt').value = p.excerpt || '';
+        el('fldImage').value = p.imageURL || '';
+        el('fldLink').value = p.postLink || '';
+        el('fldTags').value = (p.tags || []).join(', ');
+        el('fldBody').value = p.body || '';
+        el('fldPublished').checked = !!p.published;
+        el('publishStatus').textContent = p.published ? '— live' : '— draft';
+      }
+
+      function getFormPayload() {
+        return {
+          title: el('fldTitle').value.trim(),
+          slug: el('fldSlug').value.trim() || slugify(el('fldTitle').value.trim()),
+          date: el('fldDate').value.trim(),
+          excerpt: el('fldExcerpt').value.trim(),
+          body: el('fldBody').value,
+          imageURL: el('fldImage').value.trim(),
+          postLink: el('fldLink').value.trim(),
+          tags: el('fldTags').value.split(',').map(t => t.trim()).filter(Boolean),
+          published: el('fldPublished').checked,
+        };
+      }
+
+      async function savePost(e) {
+        e.preventDefault();
+        const payload = getFormPayload();
+        if (!payload.title || !payload.date) {
+          showToast('Title and date are required.', true);
+          return;
+        }
+        const url = state.selectedId ? `${API}/admin/posts/${state.selectedId}` : `${API}/admin/posts`;
+        const method = state.selectedId ? 'PUT' : 'POST';
+        const r = await fetch(url, {
+          method, credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        if (!r.ok) {
+          const err = await r.json().catch(() => ({}));
+          showToast(err.detail || 'Save failed', true);
+          return;
+        }
+        const saved = await r.json();
+        state.selectedId = saved.id;
+        showToast('Saved.');
+        await loadPosts();
+        selectPost(saved.id);
+      }
+
+      async function deletePost() {
+        if (!state.selectedId) return;
+        if (!confirm('Delete this post? This cannot be undone.')) return;
+        const r = await fetch(`${API}/admin/posts/${state.selectedId}`, { method: 'DELETE', credentials: 'include' });
+        if (!r.ok) { showToast('Delete failed', true); return; }
+        showToast('Deleted.');
+        state.selectedId = null;
+        el('editorForm').classList.add('hidden');
+        el('editorEmpty').classList.remove('hidden');
+        el('editorTitle').textContent = 'Select a post to edit';
+        await loadPosts();
+      }
+
+      function escapeHTML(s) {
+        return String(s || '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[ch]));
+      }
+
+      // ---------------- Boot ----------------
+      (async function boot() {
+        el('googleLoginBtn').addEventListener('click', startGoogleLogin);
+
+        const hadSessionId = await processSessionIdFromHash();
+        if (hadSessionId) {
+          // Poll /me now that the cookie should be set
+        }
+        const me = await fetchMe();
+        if (!me) { showLogin(hadSessionId ? undefined : undefined); return; }
+        state.user = me;
+        showDashboard(me);
+
+        el('newPostBtn').addEventListener('click', newPost);
+        el('logoutBtn').addEventListener('click', logout);
+        el('editorForm').addEventListener('submit', savePost);
+        el('cancelBtn').addEventListener('click', () => {
+          state.selectedId = null;
+          el('editorForm').classList.add('hidden');
+          el('editorEmpty').classList.remove('hidden');
+          el('editorTitle').textContent = 'Select a post to edit';
+          renderList();
+        });
+        el('deleteBtn').addEventListener('click', deletePost);
+
+        // Auto-slug from title on new post
+        el('fldTitle').addEventListener('blur', () => {
+          if (!state.selectedId && !el('fldSlug').value.trim()) {
+            el('fldSlug').value = slugify(el('fldTitle').value);
+          }
+        });
+        el('fldPublished').addEventListener('change', (e) => {
+          el('publishStatus').textContent = e.target.checked ? '— live' : '— draft';
+        });
+
+        await loadPosts();
+      })();
+    </script>
+  </body>
+</html>
