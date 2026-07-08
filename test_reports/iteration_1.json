@@ -1,0 +1,89 @@
+{
+  "summary": "Frontend-only regression + 3 bug fixes + SEO verification for Akash Puri portfolio (vanilla HTML/CSS/JS in /app/frontend/public/index.html). All 5 verification areas passed on the live REACT_APP_BACKEND_URL. No issues found.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "verification_details": {
+    "bug_fix_1_fraunces_font": {
+      "status": "PASS",
+      "notes": [
+        "String 'Syne' not present anywhere in served HTML.",
+        "'Fraunces' present in the served HTML.",
+        "Google Fonts stylesheet for Fraunces returned HTTP 200 (fetch test).",
+        "document.fonts shows Fraunces weights 500/600/700 with status 'loaded'.",
+        "Computed font-family on .hero-title: 'Fraunces, \"Playfair Display\", Georgia, serif'.",
+        "Computed font-family on .brand: 'Fraunces, serif'."
+      ]
+    },
+    "bug_fix_2_hero_portrait": {
+      "status": "PASS",
+      "src": "https://customer-assets.emergentagent.com/job_my-gallery-26/artifacts/zuanw3ir_IMG_20211102_101125.webp",
+      "naturalWidth": 2000,
+      "naturalHeight": 1333,
+      "complete": true
+    },
+    "bug_fix_3_third_journal_image": {
+      "status": "PASS",
+      "third_post_src": "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=900&auto=format&fit=crop&q=75",
+      "naturalWidth": 900,
+      "naturalHeight": 601,
+      "all_three_posts_load": true
+    },
+    "seo": {
+      "status": "PASS",
+      "title": "Akash Puri | Programmatic & Display Advertising Specialist",
+      "html_lang": "en",
+      "canonical": "https://akashpuri.com/",
+      "robots": "index, follow, max-image-preview:large",
+      "description_present": true,
+      "keywords_present": true,
+      "og_title_present": true,
+      "og_description_present": true,
+      "og_image_present": true,
+      "og_type": "profile",
+      "twitter_card": "summary_large_image",
+      "twitter_image_present": true,
+      "jsonld_type": "Person",
+      "jsonld_name": "Akash Puri"
+    },
+    "general_regression": {
+      "status": "PASS",
+      "sections_present": ["about", "projects", "skills", "journal", "contact"],
+      "nav_link_scroll_to_contact": "OK (scrollY ~= section top)",
+      "filters": {
+        "count": 5,
+        "all_shows_cards": 6,
+        "brand_shows_cards": 3,
+        "client_shows_cards": 1,
+        "reset_all_shows_cards": 6
+      },
+      "contact_form": {
+        "submit_shows_success_note": true,
+        "success_note_text": "Thanks — your message is queued. I'll be in touch shortly.",
+        "no_page_reload": true,
+        "url_after_submit": "https://my-gallery-26.preview.emergentagent.com/#contact"
+      }
+    }
+  },
+  "test_report_links": [],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "Minor: JSON-LD Person schema uses 'email' with a 'mailto:' prefix — schema.org/Person expects a plain email address (mailto: prefix is valid for ContactPoint.contactType URL but not typical for Person.email). Not blocking; Google's rich-results test still accepts it, but consider changing to 'akashpuri7@gmail.com' without mailto: for stricter compliance.",
+    "Minor: Canonical URL points to 'https://akashpuri.com/' while the site is served from the preview subdomain. This is intentional for production SEO but be aware that indexing bots hitting the preview URL will follow the canonical away — desired for prod, but worth confirming.",
+    "Info: Contact form is client-side only by design (per problem statement), so no backend integration exists — not flagged."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "N/A (skipped per request)", "frontend": "100%"},
+  "test_credentials": "N/A",
+  "seed_data_creation": "None",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Vanilla HTML/CSS/JS portfolio at /app/frontend/public/index.html; React entry (/app/frontend/src/index.js) is neutralized. No data-testid attributes — use semantic selectors (h1, .portrait img, .post-card img, .filter-btn[data-filter=X], #contactForm, section#about|#projects|#skills|#journal|#contact). All bug fixes verified working on live REACT_APP_BACKEND_URL.",
+  "rca_of_the_issue": "N/A — no bugs to root-cause; all three reported fixes verified on the live site."
+}

@@ -7,11 +7,54 @@
     <meta name="description" content="Akash Puri — Programmatic & Display Advertising Specialist. 9+ years turning media plans into measurable growth." />
     <title>Akash Puri | Programmatic & Display Advertising Specialist</title>
 
-    <!-- Google Fonts: Syne (editorial display) + Inter (body) -->
+    <!-- SEO -->
+    <link rel="canonical" href="https://akashpuri.com/" />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <meta name="author" content="Akash Puri" />
+    <meta name="keywords" content="Akash Puri, Programmatic Advertising, Display Advertising, DV360, CM360, Google Campaign Manager, The Trade Desk, Dentsu, Digital Marketing, Media Strategy, Account Manager, Pune, India" />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="profile" />
+    <meta property="og:title" content="Akash Puri | Programmatic & Display Advertising Specialist" />
+    <meta property="og:description" content="9+ years turning media plans into measurable growth. Programmatic and display specialist working across DV360, CM360 and The Trade Desk for global brands." />
+    <meta property="og:image" content="https://customer-assets.emergentagent.com/job_my-gallery-26/artifacts/zuanw3ir_IMG_20211102_101125.webp" />
+    <meta property="og:image:alt" content="Portrait of Akash Puri" />
+    <meta property="og:url" content="https://akashpuri.com/" />
+    <meta property="og:locale" content="en_IN" />
+    <meta property="profile:first_name" content="Akash" />
+    <meta property="profile:last_name" content="Puri" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Akash Puri | Programmatic & Display Advertising Specialist" />
+    <meta name="twitter:description" content="9+ years turning media plans into measurable growth across DV360, CM360 and The Trade Desk." />
+    <meta name="twitter:image" content="https://customer-assets.emergentagent.com/job_my-gallery-26/artifacts/zuanw3ir_IMG_20211102_101125.webp" />
+
+    <!-- JSON-LD: Person schema -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Person",
+      "name": "Akash Puri",
+      "jobTitle": "Account Manager, Display — Programmatic & Display Advertising Specialist",
+      "worksFor": { "@type": "Organization", "name": "Dentsu Global Services" },
+      "alumniOf": [
+        { "@type": "CollegeOrUniversity", "name": "Sinhgad Business School" },
+        { "@type": "CollegeOrUniversity", "name": "Ness Wadia College of Commerce" }
+      ],
+      "address": { "@type": "PostalAddress", "addressLocality": "Pune", "addressCountry": "IN" },
+      "email": "mailto:akashpuri7@gmail.com",
+      "telephone": "+91-98604-15060",
+      "image": "https://customer-assets.emergentagent.com/job_my-gallery-26/artifacts/zuanw3ir_IMG_20211102_101125.webp",
+      "knowsAbout": ["Programmatic Advertising", "Display Advertising", "DV360", "Campaign Manager 360", "The Trade Desk", "Google Ads", "Brand Awareness", "Media Strategy"]
+    }
+    </script>
+
+    <!-- Google Fonts: Fraunces (editorial display) + Inter (body) -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Syne:wght@500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500;1,9..144,600&family=Inter:wght@300;400;500;600;700&display=swap"
       rel="stylesheet"
     />
 
@@ -97,18 +140,19 @@
 
       /* Typography */
       h1, h2, h3, .display {
-        font-family: 'Syne', 'Playfair Display', serif;
-        font-weight: 700;
-        letter-spacing: -0.02em;
-        line-height: 1.05;
+        font-family: 'Fraunces', 'Playfair Display', Georgia, serif;
+        font-weight: 500;
+        letter-spacing: -0.025em;
+        line-height: 1.03;
         color: var(--ink);
         margin: 0;
+        font-variation-settings: "opsz" 144, "SOFT" 30;
       }
-      h1 { font-size: clamp(2.5rem, 6vw, 4.75rem); font-weight: 800; }
-      h2 { font-size: clamp(2rem, 4.5vw, 3.25rem); }
-      h3 { font-size: 1.15rem; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; }
+      h1 { font-size: clamp(2.75rem, 6.2vw, 5.25rem); font-weight: 500; letter-spacing: -0.035em; }
+      h2 { font-size: clamp(2rem, 4.5vw, 3.5rem); font-weight: 500; letter-spacing: -0.03em; }
+      h3 { font-family: 'Inter', sans-serif; font-size: 0.78rem; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; }
       p  { color: var(--ink-2); }
-      em { font-style: italic; color: var(--gold-deep); font-family: 'Syne', serif; }
+      em { font-style: italic; color: var(--gold-deep); font-family: 'Fraunces', serif; font-weight: 500; font-variation-settings: "opsz" 144, "SOFT" 100; }
       a  { color: inherit; text-decoration: none; }
 
       /* ============================================================
@@ -126,7 +170,7 @@
         padding: 18px 0;
       }
       .brand {
-        font-family: 'Syne', serif; font-weight: 700; font-size: 1.05rem;
+        font-family: 'Fraunces', serif; font-weight: 600; font-size: 1.05rem;
         letter-spacing: -0.01em;
         display: flex; align-items: center; gap: 10px;
       }
@@ -334,7 +378,7 @@
       @media (max-width: 860px) { .about-grid { grid-template-columns: 1fr; } }
 
       .col-heading {
-        font-family: 'Syne', serif;
+        font-family: 'Fraunces', serif;
         font-size: 0.85rem; font-weight: 600;
         text-transform: uppercase; letter-spacing: 0.2em;
         color: var(--gold-deep);
@@ -357,7 +401,7 @@
         margin-bottom: 6px;
       }
       .timeline-role, .edu-degree {
-        font-family: 'Syne', serif;
+        font-family: 'Fraunces', serif;
         font-size: 1.15rem;
         font-weight: 600;
         color: var(--ink);
@@ -434,7 +478,7 @@
 
       .card-top-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
       .card-title {
-        font-family: 'Syne', serif;
+        font-family: 'Fraunces', serif;
         font-size: 1.35rem; font-weight: 700;
         color: var(--ink);
       }
@@ -473,7 +517,7 @@
         border-top: 1px solid var(--line);
       }
       .card-stat-num {
-        font-family: 'Syne', serif;
+        font-family: 'Fraunces', serif;
         font-size: 2rem; font-weight: 700;
         background: var(--gold-grad);
         -webkit-background-clip: text;
@@ -500,7 +544,7 @@
         text-align: left;
       }
       .metric-num {
-        font-family: 'Syne', serif;
+        font-family: 'Fraunces', serif;
         font-size: clamp(2.5rem, 5vw, 3.75rem);
         font-weight: 700;
         line-height: 1;
@@ -598,7 +642,7 @@
         color: var(--gold-deep); font-weight: 600;
       }
       .post-title {
-        font-family: 'Syne', serif;
+        font-family: 'Fraunces', serif;
         font-size: 1.25rem; font-weight: 600;
         color: var(--ink);
         margin: 10px 0 12px;
@@ -672,7 +716,7 @@
         text-transform: none;
         letter-spacing: -0.01em;
         font-size: 1.5rem;
-        font-family: 'Syne', serif;
+        font-family: 'Fraunces', serif;
         margin-bottom: 16px;
       }
       .contact-side p { font-size: 0.98rem; margin-bottom: 32px; }
@@ -752,7 +796,7 @@
 
             <!-- SWAP: Replace src below with your own profile image path -->
             <div class="portrait" data-tilt data-tilt-max="12" data-tilt-speed="700" data-tilt-glare data-tilt-max-glare="0.35">
-              <img src="https://images.unsplash.com/photo-1560250097-0b93528c311a?w=800&auto=format&fit=crop&q=80" alt="Akash Puri" />
+              <img src="https://customer-assets.emergentagent.com/job_my-gallery-26/artifacts/zuanw3ir_IMG_20211102_101125.webp" alt="Portrait of Akash Puri, programmatic and display advertising specialist" />
             </div>
 
             <!-- Skill orbit chips (decorative) -->
@@ -1114,7 +1158,7 @@
           title: 'The Quiet Discipline of Floodlight Hygiene',
           date: 'January 18, 2025',
           excerpt: 'Bad tags don\'t announce themselves. They just quietly attribute the wrong conversions to the wrong campaigns until someone gets fired. A short primer on keeping your tracking house in order.',
-          imageURL: 'https://images.unsplash.com/photo-1611095973763-414019e72400?w=900&auto=format&fit=crop&q=75',
+          imageURL: 'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=900&auto=format&fit=crop&q=75',
           postLink: '#'
         }
       ];
