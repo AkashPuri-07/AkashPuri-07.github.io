@@ -4,93 +4,116 @@
 User wanted to rebuild an existing HTML portfolio (Akash Puri — Programmatic & Display Advertising Specialist, 9+ yrs, Dentsu) into a bright, luxurious, cinematic editorial site. Explicit constraint: **vanilla HTML/CSS/JS only** (no React/Next). Libraries via CDN: GSAP, ScrollTrigger, vanilla-tilt.
 
 ## Architecture
-- Public site served via CRA `public/index.html` (React entry `/app/frontend/src/index.js` is a no-op).
-- **Backend**: FastAPI at `/app/backend/server.py` with MongoDB (`test_database`). Now hosts CRUD API for Journal posts + Emergent Google OAuth session exchange.
-- **Admin dashboard**: vanilla HTML/JS at `/app/frontend/public/admin/index.html` (also duplicated at `/admin.html`). Auth: Emergent Google OAuth allow-list.
-- Portfolio journal section fetches posts from `GET /api/posts` at page load.
+- **Public site**: served via CRA `public/index.html` (React entry `/app/frontend/src/index.js` is a no-op). Portfolio journal section fetches from `GET /api/posts`.
+- **Backend**: FastAPI at `/app/backend/server.py` with MongoDB. Journal CRUD, Emergent Google OAuth, contact messages + Resend email.
+- **Admin**: vanilla HTML/JS at `/app/frontend/public/admin/index.html` (+ mirror at `/admin.html`). Two tabs: Journal + Messages.
+- **Blog reading pages** (IN PROGRESS): static HTML per post at `/app/frontend/public/blog/{slug}/index.html`.
 
-## Design Tokens (locked)
-- Background `#f6f4ef` (ivory) with peach + rose gradient ambient blobs.
-- Accent champagne gold `#b89968` → `#8f7443`.
-- Ink `#14130f` / `#4a4740` / `#8a857b`.
-- **Fonts**: Fraunces (variable serif) + Inter.
-- Glass panels `rgba(255,255,255,0.55)` + 18px blur.
-
-## User Personas
-- Primary: hiring managers / clients evaluating Akash's programmatic ad expertise.
-- Admin: Akash himself (single-user admin allow-list = `akashpuri7@gmail.com`).
+## Design Tokens
+- BG `#f6f4ef` ivory, ink `#14130f`, accent gold `#b89968` → `#8f7443`.
+- **Fonts**: portfolio + admin = Fraunces headers + Inter body. **Blog reading pages = Source Serif 4 headers + Inter body** (user asked for more professional/readable fonts on blog pages).
 
 ## Auth Model
-- Emergent-managed Google OAuth via `https://auth.emergentagent.com/` (redirect flow with `#session_id=` fragment).
-- Backend exchanges `X-Session-ID` → Emergent `session-data` → issues httpOnly `session_token` cookie (7-day TTL).
-- Allow-list: `ADMIN_EMAILS` env var (defaults to `akashpuri7@gmail.com`). Non-admin emails are rejected with 403 during session creation.
-- Dual auth: cookie OR `Authorization: Bearer <session_token>` header both accepted.
-
-## Journal Post Schema
-```
-id: uuid, slug: unique, title, date (string), excerpt, body (markdown),
-imageURL, postLink, tags[], published (bool), created_at, updated_at
-```
+- Emergent Google OAuth. Allow-list `ADMIN_EMAILS=akashpuri7@gmail.com`. Session token cookie (7-day).
 
 ## What's Been Implemented (chronological)
+- **MVP** — editorial redesign, GSAP + vanilla-tilt animations, contact form (iteration_1: PASS).
+- **Fonts/portrait/SEO** — Syne→Fraunces, personal photo, canonical/OG/Twitter/JSON-LD (iteration_1 verified).
+- **Brand assets** — Nano-Banana favicon + og-image 1200×630 (iteration_2: PASS).
+- **Sitemap + robots** — added.
+- **Admin dashboard + Journal CRUD** — Google OAuth, allow-list, dynamic Journal (iteration_3: PASS).
+- **Contact form → email + admin inbox** — Resend delivery, Messages tab (iteration_4 caught HTML corruption → iteration_5: PASS 100%).
 
-### Dec 2025 — MVP (iteration_1: PASS 100%)
-- Full editorial redesign, GSAP animations, vanilla-tilt 3D cards, filterable projects, animated counters, contact form (client-side).
+## IN PROGRESS: /blog/{slug}/ static reading pages
+User approved a static preview (Source Serif 4 fonts). Then said **"done ship it"**. User is now on break — resume from step 3 below.
 
-### Dec 2025 — Bug fixes (iteration_1 verified)
-- Font Syne → Fraunces. Hero portrait replaced with user's photo. Broken 3rd journal image fixed. Full SEO (canonical, robots, OG, Twitter, JSON-LD Person schema).
+### Approved design (see previous chat + git for preview screenshots)
+- Sticky topbar with brand + "Back to Journal" arrow
+- Reading progress bar at top
+- Editorial eyebrow, huge Source Serif 4 title, Inter lede
+- Author card with photo/role, date, computed reading time
+- Hero image with peach glow shadow
+- Prose: Source Serif 4 headings + Inter body, gold `em`, gold code chips, dark `pre` blocks
+- Pull-quote (auto-detected from first `>` blockquote in markdown, if between 30–240 chars)
+- Share bar (LinkedIn, Twitter/X, Copy link)
+- Author card
+- Related posts (2 most-recent other published)
+- Dark CTA card driving back to `/#contact`
 
-### Dec 2025 — Brand assets (iteration_2: PASS 100%)
-- Gemini Nano Banana generated: favicon "A" monogram + og:image 1200×630 background.
-- PIL composed final og:image with Fraunces/Inter text overlay.
-- Full favicon set + og-image.png + apple-touch-icon.
+### Progress so far
+- [x] `markdown` + `bleach` installed and added to `requirements.txt`
+- [x] Created `/app/backend/blog_renderer.py` — the full renderer (fonts, prose styles, SEO, JSON-LD Article schema, pull-quote auto-detect, related posts, reading-time). Public API: `write_post_file(post, all_published)`, `remove_post_file(slug)`, `regenerate_all(published_posts)`, `build_sitemap_urls(published)`.
+- [x] Created empty dir `/app/frontend/public/blog/`
+- [ ] Wire renderer into `/app/backend/server.py`:
+  - [ ] Import from `blog_renderer`
+  - [ ] On startup after seed: call `blog_renderer.regenerate_all(published_posts_list)`
+  - [ ] After `POST /api/admin/posts` → call `write_post_file(post, all_published)`
+  - [ ] After `PUT  /api/admin/posts/{id}` → same
+  - [ ] After `DELETE /api/admin/posts/{id}` → `remove_post_file(slug)`
+  - [ ] Note: `write_post_file` internally handles unpublish (removes file). Any state change needs the *fresh* list of all published posts, so fetch once and pass through.
+- [ ] Update `sitemap.xml` — either statically list current posts OR dynamically generate via `GET /api/sitemap.xml`. Simplest: at post save/delete, regenerate `/app/frontend/public/sitemap.xml` with all `/blog/{slug}/` URLs appended (keep the 6 existing anchor URLs). Consider having `blog_renderer` own it.
+- [ ] Update portfolio Journal cards to link to `/blog/{slug}/` if `postLink` is empty or `#`. In `/app/frontend/public/index.html` `renderPosts()`, change:
+  ```js
+  href="${post.postLink || '#'}"  →  href="${(post.postLink && post.postLink !== '#') ? post.postLink : '/blog/' + post.slug + '/'}"
+  ```
+- [ ] Verify with `testing_agent_v3`:
+  - Publishing a new post creates `/blog/{slug}/index.html` (200)
+  - Editing regenerates the file
+  - Unpublishing / deleting removes the file (404 on subsequent GET)
+  - SEO tags per post (canonical, og:image, JSON-LD Article present)
+  - Portfolio Journal cards now link to `/blog/{slug}/`
+  - Reading-time computed reasonable
+  - Sitemap includes new URLs
+  - Full regression (admin, messages, portfolio)
 
-### Dec 2025 — SEO extras
-- `sitemap.xml` + `robots.txt` at `/app/frontend/public/`.
+### Files touched this iteration (WIP)
+| Path | Status |
+|---|---|
+| `/app/backend/blog_renderer.py` | ✅ Created |
+| `/app/backend/requirements.txt` | ✅ Includes `markdown` and `bleach` |
+| `/app/frontend/public/blog/` | ✅ Empty folder created |
+| `/app/frontend/public/blog-preview.html` | Deleted (was mock) |
+| `/app/backend/server.py` | ⏳ NEEDS wiring calls to blog_renderer on save/update/delete + startup |
+| `/app/frontend/public/index.html` (portfolio) | ⏳ NEEDS renderPosts() href change |
+| `/app/frontend/public/sitemap.xml` | ⏳ NEEDS blog URLs (optional: dynamic regen) |
+| `/app/test_reports/iteration_6.json` | Not yet created — call `testing_agent_v3` after wiring |
 
-### Jan 2026 — Admin dashboard + persistence (iteration_3: PASS 100% — 24/24 backend, 100% frontend)
-- Backend: `/api/auth/session` (Emergent OAuth exchange), `/api/auth/me`, `/api/auth/logout`; `/api/posts` (public list published), `/api/posts/{slug}` (public single); `/api/admin/posts` CRUD (list/get/create/update/delete) protected by admin allow-list.
-- Frontend admin: full CRUD UI at `/admin/`, `/admin`, `/admin.html`, `/admin/index.html` — all resolve to the same page.
-- Portfolio Journal now dynamic — fetches from `/api/posts` at load.
-- 3 initial posts seeded on first startup (if empty collection).
-- MongoDB collections: `users`, `user_sessions`, `posts`.
+### Resume command for next session
+> "Continue the blog reading pages — wire blog_renderer into server.py, update portfolio Journal card hrefs, regenerate sitemap, then run testing_agent."
 
-## Prioritized Backlog
+## Prioritized Backlog (post-blog-pages)
 
-### P0 — before deployment
-- [ ] User to register a real domain (support_agent guidance: Namecheap/Cloudflare/Porkbun → Emergent Deploy → Link domain → Entri).
-- [ ] Once live, swap `href="/"` in canonical, `content="/"` in og:url, `<loc>` URLs in sitemap.xml, `Sitemap:` in robots.txt to the absolute domain.
-- [ ] Optional: rename Emergent project — support confirmed the "my-gallery" project name is set at project creation; either use a custom domain (recommended) or spin up a new project named "akashpuri" and migrate.
+### P0
+- Register real domain → swap canonical, og:url, sitemap `<loc>`, robots.txt Sitemap: line to absolute URLs
 
 ### P1
-- [ ] Wire contact form to Resend for real email delivery.
-- [ ] Add analytics/event tracking on CTA clicks.
-- [ ] Add a `published_at` field so re-publishing an older draft doesn't jump it to the top (currently sorts by `created_at`).
+- Contact form auto-reply email to sender
+- Simple rate-limiting on `POST /api/messages`
 
 ### P2
-- [ ] Public single-post page (`/blog/{slug}`) rendering markdown body with a nice reading layout.
-- [ ] Cal.com or Calendly embed above contact section.
-- [ ] Image upload via Emergent object storage instead of manual imageURL entry.
-- [ ] Progressive image loading / WebP+AVIF sources.
+- Cal.com/Calendly embed above contact
+- Image upload via object storage (instead of manual imageURL entry)
+- Analytics on CTA clicks
 
 ## Key File Map
 | Path | Purpose |
 |---|---|
-| `/app/frontend/public/index.html` | Public portfolio (fetches posts from /api/posts) |
-| `/app/frontend/public/admin/index.html` + `/admin.html` | Admin dashboard (Google login → CRUD) |
-| `/app/frontend/public/sitemap.xml`, `robots.txt` | SEO files |
+| `/app/frontend/public/index.html` | Public portfolio |
+| `/app/frontend/public/admin/index.html` + `/admin.html` | Admin dashboard (Journal + Messages tabs) |
+| `/app/frontend/public/blog/{slug}/index.html` | (WIP) Per-post reading pages |
+| `/app/frontend/public/sitemap.xml`, `robots.txt` | SEO |
 | `/app/frontend/public/favicon*.png/ico`, `apple-touch-icon.png`, `og-image.png` | Brand assets |
 | `/app/frontend/src/index.js` | No-op (React neutralized) |
-| `/app/backend/server.py` | FastAPI: auth + posts CRUD |
-| `/app/backend/.env` | `MONGO_URL`, `DB_NAME`, `CORS_ORIGINS`, `EMERGENT_LLM_KEY`, `ADMIN_EMAILS` |
-| `/app/backend/tests/backend_test.py` | Pytest E2E suite (24 tests) |
-| `/app/scripts/generate_brand_images.py` | Nano Banana favicon + og:image generator |
-| `/app/scripts/process_brand_images.py` | PIL post-processing |
-| `/app/memory/test_credentials.md` | Test session seeding instructions |
+| `/app/backend/server.py` | FastAPI: auth + posts + messages CRUD |
+| `/app/backend/blog_renderer.py` | (NEW WIP) Static blog page renderer |
+| `/app/backend/.env` | MONGO_URL, DB_NAME, CORS_ORIGINS, EMERGENT_LLM_KEY, ADMIN_EMAILS, EMERGENT_EMAIL_KEY, EMAIL_FROM_NAME, CONTACT_INBOX |
+| `/app/memory/test_credentials.md` | Test session seeding |
 
 ## Test Reports
-- `iteration_1.json` — PASS 100% (font/portrait/journal/SEO/regression)
-- `iteration_2.json` — PASS 100% (favicon + og:image 1200×630 + canonical TODO)
-- `iteration_3.json` — PASS 100% (24/24 backend + full admin UI + public feed regression)
+- iteration_1..3 all PASS 100%
+- iteration_4 caught HTML corruption (bug)
+- iteration_5 PASS 100% after fix
+- iteration_6 pending (blog pages)
 
-## Status: Admin dashboard live and persisting to Mongo. Portfolio journal now data-driven.
+## Status: PAUSED mid-work on `/blog/{slug}/` pages.
+User is on break. Resume by wiring blog_renderer into server.py per checklist above.
