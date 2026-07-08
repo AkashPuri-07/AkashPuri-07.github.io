@@ -37,6 +37,12 @@ EMERGENT_AUTH_URL = "https://demobackend.emergentagent.com/auth/v1/env/oauth/ses
 SESSION_COOKIE = "session_token"
 SESSION_TTL_DAYS = 7
 
+# Emergent-managed Resend email (constants — do NOT read base URL from env)
+EMAIL_BASE_URL = "https://integrations.emergentagent.com"
+EMAIL_KEY = os.environ.get("EMERGENT_EMAIL_KEY", "")
+EMAIL_FROM_NAME = os.environ.get("EMAIL_FROM_NAME", "Akash Puri")
+CONTACT_INBOX = os.environ.get("CONTACT_INBOX", "akashpuri7@gmail.com")
+
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
 
@@ -82,6 +88,23 @@ class PostInput(BaseModel):
     postLink: str = ""
     tags: List[str] = Field(default_factory=list)
     published: bool = False
+
+
+class Message(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    name: str
+    email: str
+    message: str
+    read: bool = False
+    email_sent: bool = False
+    created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+
+
+class MessageInput(BaseModel):
+    name: str = Field(min_length=1, max_length=120)
+    email: str = Field(min_length=3, max_length=200)
+    message: str = Field(min_length=1, max_length=5000)
 
 
 # ---------------------------------------------------------------------------
@@ -286,6 +309,117 @@ async def admin_delete_post(post_id: str, _: User = Depends(require_admin)):
     if not result.deleted_count:
         raise HTTPException(status_code=404, detail="Post not found")
     return {"ok": True, "id": post_id}
+
+
+# ---------------------------------------------------------------------------
+# Contact messages — public submit + admin management
+# ---------------------------------------------------------------------------
+def _build_contact_email_html(name: str, email: str, message: str, created_at: str) -> str:
+    safe_message = (message or "").replace("<", "&lt;").replace(">", "&gt;").replace("\n", "<br>")
+    return f"""
+<!DOCTYPE html>
+<html>
+<body style="margin:0;padding:0;background:#f6f4ef;font-family:'Helvetica Neue',Arial,sans-serif;color:#14130f;">
+  <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background:#f6f4ef;padding:40px 20px;">
+    <tr><td align="center">
+      <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="600" style="max-width:600px;background:#ffffff;border-radius:14px;overflow:hidden;box-shadow:0 12px 32px -12px rgba(120,100,60,0.2);">
+        <tr><td style="background:linear-gradient(135deg,#d4b47a,#8f7443);padding:24px 32px;">
+          <div style="color:#fff;font-size:12px;letter-spacing:0.24em;text-transform:uppercase;font-weight:600;">Portfolio · New message</div>
+          <div style="color:#fff;font-family:Georgia,serif;font-size:24px;font-weight:600;margin-top:8px;">You have a new inquiry</div>
+        </td></tr>
+        <tr><td style="padding:32px;">
+          <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+            <tr><td style="padding:8px 0;font-size:12px;letter-spacing:0.14em;text-transform:uppercase;color:#8a857b;">From</td></tr>
+            <tr><td style="padding:0 0 16px;font-size:16px;color:#14130f;font-weight:600;">{name}<br>
+              <a href="mailto:{email}" style="color:#8f7443;font-weight:500;text-decoration:none;font-size:14px;">{email}</a>
+            </td></tr>
+            <tr><td style="padding:8px 0;font-size:12px;letter-spacing:0.14em;text-transform:uppercase;color:#8a857b;border-top:1px solid rgba(20,19,15,0.08);">Message</td></tr>
+            <tr><td style="padding:0 0 16px;font-size:15px;line-height:1.6;color:#4a4740;">{safe_message}</td></tr>
+            <tr><td style="padding:16px 0 0;border-top:1px solid rgba(20,19,15,0.08);font-size:12px;color:#8a857b;">Received {created_at}</td></tr>
+          </table>
+        </td></tr>
+        <tr><td style="padding:20px 32px;background:#f6f4ef;text-align:center;font-size:12px;color:#8a857b;">
+          Sent from your portfolio contact form · <a href="mailto:{email}" style="color:#8f7443;text-decoration:none;">Reply directly</a>
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>
+"""
+
+
+async def _send_contact_email(msg: Message) -> bool:
+    if not EMAIL_KEY:
+        logger.warning("EMERGENT_EMAIL_KEY not set — skipping email send")
+        return False
+    payload = {
+        "to": [CONTACT_INBOX],
+        "subject": f"New portfolio message from {msg.name}",
+        "html": _build_contact_email_html(msg.name, msg.email, msg.message, msg.created_at),
+        "from_name": EMAIL_FROM_NAME,
+        "contact_email": msg.email,
+    }
+    try:
+        async with httpx.AsyncClient(timeout=15.0) as hc:
+            r = await hc.post(
+                f"{EMAIL_BASE_URL}/api/v1/email/send",
+                headers={"X-Email-Key": EMAIL_KEY},
+                json=payload,
+            )
+        r.raise_for_status()
+        return True
+    except httpx.HTTPStatusError as e:
+        logger.error("Email send failed: %s %s", e.response.status_code, e.response.text[:200])
+        return False
+    except Exception as e:
+        logger.error("Email send error: %s", e)
+        return False
+
+
+@api.post("/messages", response_model=Message)
+async def submit_message(payload: MessageInput):
+    msg = Message(**payload.model_dump())
+    doc = msg.model_dump()
+    await db.messages.insert_one(doc)
+
+    # Try to send the email; update the row with the outcome but never fail the request on email trouble.
+    email_ok = await _send_contact_email(msg)
+    if email_ok:
+        await db.messages.update_one({"id": msg.id}, {"$set": {"email_sent": True}})
+        msg.email_sent = True
+    return msg
+
+
+@api.get("/admin/messages", response_model=List[Message])
+async def admin_list_messages(_: User = Depends(require_admin)):
+    docs = await db.messages.find({}, {"_id": 0}).sort("created_at", -1).to_list(1000)
+    return [Message(**d) for d in docs]
+
+
+@api.get("/admin/messages/unread-count")
+async def admin_unread_count(_: User = Depends(require_admin)):
+    count = await db.messages.count_documents({"read": False})
+    return {"unread": count}
+
+
+@api.patch("/admin/messages/{msg_id}", response_model=Message)
+async def admin_toggle_read(msg_id: str, payload: dict, _: User = Depends(require_admin)):
+    if "read" not in payload:
+        raise HTTPException(status_code=400, detail="Missing 'read' field")
+    result = await db.messages.update_one({"id": msg_id}, {"$set": {"read": bool(payload["read"])}})
+    if not result.matched_count:
+        raise HTTPException(status_code=404, detail="Message not found")
+    doc = await db.messages.find_one({"id": msg_id}, {"_id": 0})
+    return Message(**doc)
+
+
+@api.delete("/admin/messages/{msg_id}")
+async def admin_delete_message(msg_id: str, _: User = Depends(require_admin)):
+    result = await db.messages.delete_one({"id": msg_id})
+    if not result.deleted_count:
+        raise HTTPException(status_code=404, detail="Message not found")
+    return {"ok": True, "id": msg_id}
 
 
 # ---------------------------------------------------------------------------

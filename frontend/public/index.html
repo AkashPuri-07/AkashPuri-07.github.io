@@ -1226,18 +1226,36 @@
       }
 
       /* ============================================================
-         CONTACT FORM (client-side)
+         CONTACT FORM (POSTs to /api/messages)
          ============================================================ */
       function initContactForm() {
         const form = document.getElementById('contactForm');
         const note = document.getElementById('formNote');
-        form.addEventListener('submit', e => {
+        const btn = form.querySelector('.submit-btn');
+        form.addEventListener('submit', async e => {
           e.preventDefault();
           const data = Object.fromEntries(new FormData(form).entries());
           if (!data.name || !data.email || !data.message) return;
-          note.textContent = 'Thanks — your message is queued. I\'ll be in touch shortly.';
-          note.classList.add('success');
-          form.reset();
+          btn.disabled = true;
+          btn.textContent = 'Sending…';
+          try {
+            const r = await fetch('/api/messages', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(data),
+            });
+            if (!r.ok) throw new Error('bad-status');
+            note.textContent = 'Thanks — your message is on its way. I typically reply within one business day.';
+            note.classList.add('success');
+            form.reset();
+          } catch (err) {
+            note.textContent = 'Something went wrong sending your message. Please email akashpuri7@gmail.com directly.';
+            note.classList.remove('success');
+            note.style.color = 'var(--danger, #b23a3a)';
+          } finally {
+            btn.disabled = false;
+            btn.textContent = 'Send Message';
+          }
         });
       }
 

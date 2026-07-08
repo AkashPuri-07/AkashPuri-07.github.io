@@ -217,6 +217,67 @@
       .hidden { display: none !important; }
 
       .helper-text { font-size: 0.78rem; color: var(--ink-3); margin-top: 4px; }
+
+      /* Tab switcher */
+      .tabs {
+        display: inline-flex;
+        gap: 4px;
+        padding: 4px;
+        background: rgba(20,19,15,0.05);
+        border-radius: 999px;
+        margin-bottom: 24px;
+      }
+      .tab-btn {
+        border: none; background: transparent;
+        padding: 9px 20px; border-radius: 999px;
+        font: inherit; font-size: 0.88rem; font-weight: 500;
+        color: var(--ink-2); cursor: pointer;
+        display: inline-flex; align-items: center; gap: 8px;
+        transition: all 0.2s var(--ease);
+      }
+      .tab-btn:hover { color: var(--ink); }
+      .tab-btn.active { background: #fff; color: var(--ink); box-shadow: 0 2px 8px -2px rgba(120,100,60,0.15); }
+      .tab-badge {
+        background: var(--danger); color: #fff;
+        font-size: 0.68rem; font-weight: 700;
+        padding: 2px 8px; border-radius: 999px;
+        min-width: 20px; text-align: center;
+      }
+      .tab-badge.zero { display: none; }
+
+      /* Messages list */
+      .msg-list { display: flex; flex-direction: column; gap: 10px; }
+      .msg-item {
+        padding: 16px 18px;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        background: #fff;
+        transition: all 0.2s var(--ease);
+      }
+      .msg-item.unread { border-left: 3px solid var(--gold-deep); background: rgba(184,153,104,0.04); }
+      .msg-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+      .msg-name { font-weight: 600; font-size: 1rem; }
+      .msg-email { color: var(--gold-deep); font-size: 0.85rem; text-decoration: none; }
+      .msg-email:hover { text-decoration: underline; }
+      .msg-time { font-size: 0.72rem; color: var(--ink-3); letter-spacing: 0.04em; }
+      .msg-body { margin: 10px 0 12px; font-size: 0.94rem; color: var(--ink-2); white-space: pre-wrap; }
+      .msg-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+      .msg-actions .btn { padding: 6px 14px; font-size: 0.82rem; }
+      .msg-item .unread-dot {
+        display: inline-block; width: 8px; height: 8px; border-radius: 50%;
+        background: var(--gold-deep); margin-right: 6px; vertical-align: middle;
+      }
+      .msg-item.read .unread-dot { display: none; }
+
+      .email-status {
+        display: inline-flex; align-items: center; gap: 6px;
+        font-size: 0.72rem; letter-spacing: 0.06em;
+        padding: 3px 10px; border-radius: 999px;
+      }
+      .email-status.ok { background: rgba(74,124,89,0.12); color: var(--success); }
+      .email-status.fail { background: rgba(178,58,58,0.1); color: var(--danger); }
+
+      .single-panel { grid-column: 1 / -1; }
     </style>
   </head>
   <body>
@@ -257,7 +318,17 @@
         </div>
       </div>
 
-      <div class="layout">
+      <!-- Tab switcher -->
+      <div class="tabs" role="tablist">
+        <button class="tab-btn active" id="tabJournal" data-testid="tab-journal">Journal</button>
+        <button class="tab-btn" id="tabMessages" data-testid="tab-messages">
+          Messages
+          <span class="tab-badge zero" id="msgBadge" data-testid="msg-badge">0</span>
+        </button>
+      </div>
+
+      <!-- Journal tab -->
+      <div id="journalTab" class="layout">
         <!-- List panel -->
         <div class="panel">
           <div class="panel-head">
@@ -334,6 +405,21 @@
           </div>
         </div>
       </div>
+      <!-- /journal tab -->
+
+      <!-- Messages tab -->
+      <div id="messagesTab" class="layout hidden">
+        <div class="panel single-panel">
+          <div class="panel-head">
+            <div class="panel-title">Contact Messages</div>
+            <button class="btn" id="refreshMsgsBtn" data-testid="refresh-messages-btn">Refresh</button>
+          </div>
+          <div id="msgList" class="msg-list">
+            <div class="empty">Loading…</div>
+          </div>
+        </div>
+      </div>
+      <!-- /messages tab -->
     </div>
 
     <div id="toast" class="toast"></div>
@@ -341,7 +427,7 @@
     <script>
       // REMINDER: DO NOT HARDCODE THE URL, OR ADD ANY FALLBACKS OR REDIRECT URLS, THIS BREAKS THE AUTH
       const API = '/api';
-      const state = { user: null, posts: [], selectedId: null };
+      const state = { user: null, posts: [], selectedId: null, messages: [], activeTab: 'journal' };
 
       const el = (id) => document.getElementById(id);
       const showToast = (msg, isError = false) => {
@@ -540,6 +626,125 @@
 
       function escapeHTML(s) {
         return String(s || '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[ch]));
+      }
+
+      // ---------------- Boot ----------------
+      (async function boot() {
+        el('googleLoginBtn').addEventListener('click', startGoogleLogin);
+
+        const hadSessionId = await processSessionIdFromHash();
+        if (hadSessionId) {
+          // Poll /me now that the cookie should be set
+        }
+        const me = await fetchMe();
+        if (!me) { showLogin(hadSessionId ? undefined : undefined); return; }
+        state.user = me;
+        showDashboard(me);
+
+        el('newPostBtn').addEventListener('click', newPost);
+        el('logoutBtn').addEventListener('click', logout);
+        el('editorForm').addEventListener('submit', savePost);
+        el('cancelBtn').addEventListener('click', () => {
+          state.selectedId = null;
+          el('editorForm').classList.add('hidden');
+          el('editorEmpty').classList.remove('hidden');
+          el('editorTitle').textContent = 'Select a post to edit';
+          renderList();
+        });
+        el('deleteBtn').addEventListener('click', deletePost);
+
+        // Auto-slug from title on new post
+        el('fldTitle').addEventListener('blur', () => {
+          if (!state.selectedId && !el('fldSlug').value.trim()) {
+            el('fldSlug').value = slugify(el('fldTitle').value);
+          }
+        });
+        el('fldPublished').addEventListener('change', (e) => {
+          el('publishStatus').textContent = e.target.checked ? '— live' : '— draft';
+        });
+
+        // Tab switcher + messages
+        el('tabJournal').addEventListener('click', () => switchTab('journal'));
+        el('tabMessages').addEventListener('click', () => switchTab('messages'));
+        el('refreshMsgsBtn').addEventListener('click', loadMessages);
+
+        await loadPosts();
+        await pollUnreadBadge();
+        setInterval(pollUnreadBadge, 30000);
+      })();
+    </script>
+  </body>
+</html>
+lass="msg-email" href="mailto:${encodeURIComponent(m.email)}?subject=Re:%20your%20message">${escapeHTML(m.email)}</a>
+              </div>
+              <div style="display:flex;align-items:center;gap:10px;">
+                ${m.email_sent
+                  ? '<span class="email-status ok" title="Email delivered to your inbox">✓ emailed</span>'
+                  : '<span class="email-status fail" title="Email send failed — check backend logs">✗ email failed</span>'}
+                <span class="msg-time">${relativeTime(m.created_at)}</span>
+              </div>
+            </div>
+            <div class="msg-body">${escapeHTML(m.message)}</div>
+            <div class="msg-actions">
+              <button class="btn" data-act="toggle-read" data-id="${m.id}" data-testid="toggle-read-${m.id}">
+                ${m.read ? 'Mark as unread' : 'Mark as read'}
+              </button>
+              <a class="btn primary" href="mailto:${encodeURIComponent(m.email)}?subject=Re:%20your%20message" data-testid="reply-${m.id}">Reply by email ↗</a>
+              <button class="btn danger" data-act="delete-msg" data-id="${m.id}" data-testid="delete-msg-${m.id}">Delete</button>
+            </div>
+          </div>
+        `).join('');
+
+        list.querySelectorAll('button[data-act]').forEach(btn => {
+          btn.addEventListener('click', async (e) => {
+            const id = btn.dataset.id;
+            const act = btn.dataset.act;
+            if (act === 'toggle-read') {
+              const msg = state.messages.find(m => m.id === id);
+              await patchMessage(id, { read: !msg.read });
+            } else if (act === 'delete-msg') {
+              if (!confirm('Delete this message? This cannot be undone.')) return;
+              await deleteMessage(id);
+            }
+          });
+        });
+      }
+
+      async function patchMessage(id, patch) {
+        const r = await fetch(`${API}/admin/messages/${id}`, {
+          method: 'PATCH', credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(patch),
+        });
+        if (!r.ok) { showToast('Update failed', true); return; }
+        await loadMessages();
+      }
+
+      async function deleteMessage(id) {
+        const r = await fetch(`${API}/admin/messages/${id}`, { method: 'DELETE', credentials: 'include' });
+        if (!r.ok) { showToast('Delete failed', true); return; }
+        showToast('Deleted.');
+        await loadMessages();
+      }
+
+      function switchTab(tab) {
+        state.activeTab = tab;
+        el('tabJournal').classList.toggle('active', tab === 'journal');
+        el('tabMessages').classList.toggle('active', tab === 'messages');
+        el('journalTab').classList.toggle('hidden', tab !== 'journal');
+        el('messagesTab').classList.toggle('hidden', tab !== 'messages');
+        if (tab === 'messages') loadMessages();
+      }
+
+      async function pollUnreadBadge() {
+        try {
+          const r = await fetch(`${API}/admin/messages/unread-count`, { credentials: 'include' });
+          if (!r.ok) return;
+          const { unread } = await r.json();
+          const badge = el('msgBadge');
+          badge.textContent = unread;
+          badge.classList.toggle('zero', unread === 0);
+        } catch (_) {}
       }
 
       // ---------------- Boot ----------------

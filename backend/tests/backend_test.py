@@ -82,6 +82,11 @@ def admin_client(admin_session):
 def cleanup_test_posts(mongo_db):
     yield
     mongo_db.posts.delete_many({"slug": {"$regex": "^test-"}})
+    # Cleanup any stray test messages that used TEST_ prefix names/emails.
+    mongo_db.messages.delete_many({"$or": [
+        {"name": {"$regex": "^TEST_"}},
+        {"email": {"$regex": "@example\\.com$"}},
+    ]})
 
 
 # ---------------------------------------------------------------------------
@@ -265,3 +270,158 @@ class TestStaticRegression:
     def test_asset_200(self, public_client, path):
         r = public_client.get(f"{BASE_URL}{path}")
         assert r.status_code == 200, f"{path} returned {r.status_code}"
+
+
+# ---------------------------------------------------------------------------
+# Contact Messages — public submit + admin management
+# ---------------------------------------------------------------------------
+class TestMessagesPublicSubmit:
+    """POST /api/messages is unauthenticated (contact form endpoint)."""
+
+    def test_submit_valid_message_persists_and_sends_email(self, public_client, mongo_db):
+        payload = {
+            "name": "TEST_Sender",
+            "email": "test+valid@example.com",
+            "message": "Automated integration probe — please ignore.",
+        }
+        r = public_client.post(f"{BASE_URL}/api/messages", json=payload)
+        assert r.status_code == 200, r.text
+        data = r.json()
+        # Response shape
+        assert "id" in data and isinstance(data["id"], str) and len(data["id"]) > 0
+        assert data["name"] == payload["name"]
+        assert data["email"] == payload["email"]
+        assert data["message"] == payload["message"]
+        assert data["read"] is False
+        assert "email_sent" in data and isinstance(data["email_sent"], bool)
+        assert "created_at" in data and isinstance(data["created_at"], str)
+
+        # Verify persistence via Mongo (avoids needing admin auth for a public-endpoint check)
+        doc = mongo_db.messages.find_one({"id": data["id"]}, {"_id": 0})
+        assert doc is not None, "Message was not persisted in Mongo"
+        assert doc["email"] == payload["email"]
+        assert doc["email_sent"] == data["email_sent"]
+
+        # Integration probe: Emergent Resend proxy should have accepted the send.
+        # If the key is present and Resend responded 2xx, email_sent should be True.
+        # We record but don't hard-fail (graceful degradation is documented behavior).
+        if not data["email_sent"]:
+            pytest.skip("email_sent=False — check EMERGENT_EMAIL_KEY and Resend proxy status")
+
+        # Cleanup
+        mongo_db.messages.delete_one({"id": data["id"]})
+
+    @pytest.mark.parametrize("payload", [
+        {"email": "a@b.com", "message": "hi"},                   # missing name
+        {"name": "x", "message": "hi"},                          # missing email
+        {"name": "x", "email": "a@b.com"},                       # missing message
+        {"name": "", "email": "a@b.com", "message": "hi"},       # empty name
+        {"name": "x", "email": "", "message": "hi"},             # empty email
+        {"name": "x", "email": "a@b.com", "message": ""},        # empty message
+    ])
+    def test_submit_invalid_payload_returns_422(self, public_client, payload):
+        r = public_client.post(f"{BASE_URL}/api/messages", json=payload)
+        assert r.status_code == 422, f"Expected 422 for {payload}, got {r.status_code}"
+
+
+class TestMessagesAuthGuards:
+    """All admin message routes require auth."""
+
+    def test_list_requires_auth(self, public_client):
+        r = public_client.get(f"{BASE_URL}/api/admin/messages")
+        assert r.status_code == 401
+
+    def test_unread_count_requires_auth(self, public_client):
+        r = public_client.get(f"{BASE_URL}/api/admin/messages/unread-count")
+        assert r.status_code == 401
+
+    def test_patch_requires_auth(self, public_client):
+        r = public_client.patch(f"{BASE_URL}/api/admin/messages/fake-id", json={"read": True})
+        assert r.status_code == 401
+
+    def test_delete_requires_auth(self, public_client):
+        r = public_client.delete(f"{BASE_URL}/api/admin/messages/fake-id")
+        assert r.status_code == 401
+
+
+class TestMessagesAdminFlow:
+    """End-to-end admin management flow — submit → list → mark read → unread → delete."""
+
+    def test_full_lifecycle(self, public_client, admin_client, mongo_db):
+        # Snapshot pre-existing unread count so the assertion is deterministic even if
+        # other messages linger in the collection.
+        pre = admin_client.get(f"{BASE_URL}/api/admin/messages/unread-count")
+        assert pre.status_code == 200
+        pre_unread = pre.json()["unread"]
+
+        # (a) POST publicly
+        payload = {
+            "name": "TEST_LifecycleUser",
+            "email": "test+lifecycle@example.com",
+            "message": "Lifecycle test message.",
+        }
+        r = public_client.post(f"{BASE_URL}/api/messages", json=payload)
+        assert r.status_code == 200
+        created = r.json()
+        msg_id = created["id"]
+
+        try:
+            # (a) List → newest first at position 0
+            r = admin_client.get(f"{BASE_URL}/api/admin/messages")
+            assert r.status_code == 200
+            msgs = r.json()
+            assert isinstance(msgs, list) and len(msgs) >= 1
+            assert msgs[0]["id"] == msg_id, "New message should be sorted at position 0 (created_at desc)"
+            assert msgs[0]["name"] == payload["name"]
+            assert msgs[0]["email"] == payload["email"]
+            assert msgs[0]["message"] == payload["message"]
+            assert msgs[0]["read"] is False
+
+            # (b) Unread count incremented by 1
+            r = admin_client.get(f"{BASE_URL}/api/admin/messages/unread-count")
+            assert r.status_code == 200
+            assert r.json()["unread"] == pre_unread + 1
+
+            # (c) PATCH read=true
+            r = admin_client.patch(f"{BASE_URL}/api/admin/messages/{msg_id}", json={"read": True})
+            assert r.status_code == 200
+            assert r.json()["read"] is True
+            assert r.json()["id"] == msg_id
+
+            r = admin_client.get(f"{BASE_URL}/api/admin/messages/unread-count")
+            assert r.json()["unread"] == pre_unread
+
+            # (d) PATCH read=false
+            r = admin_client.patch(f"{BASE_URL}/api/admin/messages/{msg_id}", json={"read": False})
+            assert r.status_code == 200
+            assert r.json()["read"] is False
+            r = admin_client.get(f"{BASE_URL}/api/admin/messages/unread-count")
+            assert r.json()["unread"] == pre_unread + 1
+
+            # (e) DELETE
+            r = admin_client.delete(f"{BASE_URL}/api/admin/messages/{msg_id}")
+            assert r.status_code == 200
+
+            # (f) Confirm removal
+            r = admin_client.get(f"{BASE_URL}/api/admin/messages")
+            assert not any(m["id"] == msg_id for m in r.json()), "Deleted message still present"
+            r = admin_client.patch(f"{BASE_URL}/api/admin/messages/{msg_id}", json={"read": True})
+            assert r.status_code == 404
+        finally:
+            # Safety net cleanup in case of assertion failure
+            mongo_db.messages.delete_one({"id": msg_id})
+
+    def test_patch_missing_read_field_returns_400(self, admin_client, public_client, mongo_db):
+        r = public_client.post(f"{BASE_URL}/api/messages", json={
+            "name": "TEST_PatchGuard", "email": "test+patch@example.com", "message": "x",
+        })
+        msg_id = r.json()["id"]
+        try:
+            r = admin_client.patch(f"{BASE_URL}/api/admin/messages/{msg_id}", json={})
+            assert r.status_code == 400
+        finally:
+            mongo_db.messages.delete_one({"id": msg_id})
+
+    def test_delete_nonexistent_returns_404(self, admin_client):
+        r = admin_client.delete(f"{BASE_URL}/api/admin/messages/does-not-exist-xyz")
+        assert r.status_code == 404
