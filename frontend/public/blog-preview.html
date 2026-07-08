@@ -8,7 +8,7 @@
     <link rel="icon" href="/favicon.ico" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500;1,9..144,600&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,500;0,8..60,600;0,8..60,700;1,8..60,400;1,8..60,500&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
     <style>
       :root {
         --bg: #f6f4ef;
@@ -70,7 +70,7 @@
         padding: 18px 32px; max-width: 1240px; margin: 0 auto;
       }
       .brand {
-        font-family: 'Fraunces', serif; font-weight: 600; font-size: 1.05rem;
+        font-family: 'Source Serif 4', Georgia, serif; font-weight: 600; font-size: 1.05rem;
         display: flex; align-items: center; gap: 10px; color: var(--ink);
         text-decoration: none;
       }
@@ -142,7 +142,7 @@
         box-shadow: 0 4px 12px -4px rgba(120,100,60,0.3);
       }
       .meta-author .name {
-        font-family: 'Fraunces', serif; font-weight: 600; font-size: 0.98rem;
+        font-family: 'Source Serif 4', Georgia, serif; font-weight: 600; font-size: 0.98rem;
         color: var(--ink);
       }
       .meta-author .role {
@@ -166,22 +166,21 @@
       }
       .hero-img img { width: 100%; height: 100%; object-fit: cover; }
 
-      .prose { font-size: 1.08rem; color: var(--ink); line-height: 1.75; }
+      .prose { font-size: 1.1rem; color: var(--ink); line-height: 1.75; font-family: 'Inter', system-ui, sans-serif; }
       .prose h2 {
-        font-family: 'Fraunces', serif;
-        font-weight: 500;
-        font-size: 1.85rem;
-        letter-spacing: -0.02em;
+        font-family: 'Source Serif 4', Georgia, serif;
+        font-weight: 600;
+        font-size: 1.6rem;
+        letter-spacing: -0.01em;
+        line-height: 1.3;
         margin: 56px 0 20px;
         color: var(--ink);
-        font-variation-settings: "opsz" 144, "SOFT" 30;
       }
       .prose h3 {
-        font-family: 'Fraunces', serif;
-        font-weight: 500;
-        font-size: 1.35rem;
+        font-family: 'Source Serif 4', Georgia, serif;
+        font-weight: 600;
+        font-size: 1.25rem;
         margin: 40px 0 14px;
-        letter-spacing: -0.01em;
       }
       .prose p { margin: 0 0 22px; color: var(--ink-2); }
       .prose strong { color: var(--ink); font-weight: 600; }
@@ -192,11 +191,12 @@
       .prose a:hover { color: var(--ink); }
       .prose blockquote {
         margin: 32px 0;
-        padding: 8px 0 8px 28px;
+        padding: 8px 0 8px 24px;
         border-left: 3px solid var(--gold);
-        font-family: 'Fraunces', serif;
+        font-family: 'Source Serif 4', Georgia, serif;
         font-style: italic;
-        font-size: 1.2rem;
+        font-weight: 400;
+        font-size: 1.15rem;
         color: var(--ink);
         line-height: 1.55;
       }
@@ -245,14 +245,14 @@
         position: relative;
       }
       .pull-quote p {
-        font-family: 'Fraunces', serif;
+        font-family: 'Source Serif 4', Georgia, serif;
         font-style: italic;
-        font-size: 1.75rem;
-        line-height: 1.35;
+        font-weight: 500;
+        font-size: 1.55rem;
+        line-height: 1.4;
         color: var(--ink);
         margin: 0 0 20px;
-        font-variation-settings: "opsz" 144, "SOFT" 100;
-        letter-spacing: -0.015em;
+        letter-spacing: -0.005em;
       }
       .pull-quote cite {
         font-style: normal; font-size: 0.85rem;
@@ -272,7 +272,7 @@
         flex-wrap: wrap;
       }
       .share .label {
-        font-family: 'Fraunces', serif;
+        font-family: 'Source Serif 4', Georgia, serif;
         font-weight: 600;
         font-size: 1.05rem;
       }
@@ -303,7 +303,7 @@
         flex-shrink: 0;
       }
       .author-card h4 {
-        font-family: 'Fraunces', serif; font-size: 1.2rem; font-weight: 600;
+        font-family: 'Source Serif 4', Georgia, serif; font-size: 1.2rem; font-weight: 600;
         margin: 0 0 4px; color: var(--ink);
       }
       .author-card p { margin: 0; font-size: 0.92rem; color: var(--ink-2); }
@@ -319,10 +319,10 @@
         border-top: 1px solid var(--line);
       }
       .related-title {
-        font-family: 'Fraunces', serif; font-weight: 500;
-        font-size: 1.8rem;
+        font-family: 'Source Serif 4', Georgia, serif; font-weight: 600;
+        font-size: 1.6rem;
         margin: 0 0 32px;
-        letter-spacing: -0.02em;
+        letter-spacing: -0.01em;
       }
       .related-grid {
         display: grid; grid-template-columns: 1fr 1fr; gap: 20px;
@@ -339,7 +339,7 @@
       }
       .related-card:hover { border-color: rgba(184,153,104,0.35); transform: translateY(-3px); box-shadow: 0 12px 32px -12px rgba(120,100,60,0.25); }
       .related-card .r-date { font-size: 0.72rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--gold-deep); font-weight: 600; }
-      .related-card .r-title { font-family: 'Fraunces', serif; font-size: 1.15rem; font-weight: 600; margin: 10px 0 10px; color: var(--ink); line-height: 1.35; }
+      .related-card .r-title { font-family: 'Source Serif 4', Georgia, serif; font-size: 1.1rem; font-weight: 600; margin: 10px 0 10px; color: var(--ink); line-height: 1.4; }
       .related-card .r-excerpt { font-size: 0.9rem; color: var(--ink-2); margin: 0; }
 
       /* Footer CTA */
@@ -352,11 +352,12 @@
         border-radius: 24px;
       }
       .foot-cta h3 {
-        font-family: 'Fraunces', serif; font-weight: 500;
-        font-size: 1.85rem;
+        font-family: 'Source Serif 4', Georgia, serif; font-weight: 600;
+        font-size: 1.65rem;
         margin: 0 0 12px;
         color: #f8f5ec;
-        letter-spacing: -0.02em;
+        letter-spacing: -0.01em;
+        line-height: 1.3;
       }
       .foot-cta p { color: rgba(248,245,236,0.72); margin: 0 0 24px; }
       .foot-cta .btn {
