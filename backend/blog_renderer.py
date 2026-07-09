@@ -6,6 +6,7 @@ so search engines can index each article as a real URL.
 from __future__ import annotations
 
 import html
+import json
 import os
 import re
 import shutil
@@ -156,26 +157,25 @@ def _post_html(post: dict, related: list[dict]) -> str:
 
     tags_line = " · ".join([html.escape(t.upper()) for t in tags[:2]]) if tags else "JOURNAL"
 
-    jsonld = f"""
-    {{
-      "@context": "https://schema.org",
-      "@type": "Article",
-      "headline": {repr(title)},
-      "description": {repr(seo_desc)},
-      "image": [{repr(og_image)}],
-      "datePublished": {repr(post.get('created_at',''))},
-      "dateModified": {repr(post.get('updated_at', post.get('created_at','')))},
-      "author": {{
-        "@type": "Person",
-        "name": {repr(AUTHOR_NAME)},
-        "jobTitle": {repr(AUTHOR_ROLE)},
-        "image": {repr(AUTHOR_IMG)}
-      }},
-      "publisher": {{"@type": "Person", "name": {repr(AUTHOR_NAME)}}},
-      "mainEntityOfPage": {{"@type": "WebPage", "@id": {repr(canonical)}}},
-      "keywords": {repr(", ".join(tags))}
-    }}
-    """.strip()
+    jsonld_dict = {
+        "@context": "https://schema.org",
+        "@type": "Article",
+        "headline": title,
+        "description": seo_desc,
+        "image": [og_image] if og_image else [],
+        "datePublished": post.get("created_at", ""),
+        "dateModified": post.get("updated_at", post.get("created_at", "")),
+        "author": {
+            "@type": "Person",
+            "name": AUTHOR_NAME,
+            "jobTitle": AUTHOR_ROLE,
+            "image": AUTHOR_IMG,
+        },
+        "publisher": {"@type": "Person", "name": AUTHOR_NAME},
+        "mainEntityOfPage": {"@type": "WebPage", "@id": canonical},
+        "keywords": ", ".join(tags),
+    }
+    jsonld = json.dumps(jsonld_dict, ensure_ascii=False, separators=(",", ":"))
 
     return f"""<!doctype html>
 <html lang="en">

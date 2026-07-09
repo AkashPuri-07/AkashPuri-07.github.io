@@ -113,7 +113,6 @@ User approved a static preview (Source Serif 4 fonts). Then said **"done ship it
 - iteration_1..3 all PASS 100%
 - iteration_4 caught HTML corruption (bug)
 - iteration_5 PASS 100% after fix
-- iteration_6 pending (blog pages)
+- iteration_6 PASS 100% (blog pages + section rhythm — 43/43 backend, 100% frontend)
 
-## Status: PAUSED mid-work on `/blog/{slug}/` pages.
-User is on break. Resume by wiring blog_renderer into server.py per checklist above.
+## Status: LIVE — iteration_6 (blog reading pages + section rhythm) PASS 100%
