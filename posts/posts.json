@@ -1,0 +1,54 @@
+[
+  {
+    "slug": "how-i-audit-a-dv360-account",
+    "title": "How I Audit a DV360 Account in Under Thirty Minutes",
+    "date": "November 22, 2025",
+    "excerpt": "When a client hands over a stalled account, they want to know two things in the first meeting: what is wrong, and how quickly it can be fixed. Here is the exact audit I run before that meeting.",
+    "body": "When a client hands over a stalled account, they want two things in the first meeting: **what is wrong**, and **how quickly it can be fixed**. Not a strategy deck. Not a quarterly plan. A diagnosis.\n\nOver the last few years I have compressed that diagnostic into a repeatable thirty-minute pass. It fits neatly into the gap between one client call and the next, and it tells me — with maybe eighty percent confidence — where the account is actually leaking.\n\nHere is the audit, in the order I run it.\n\n## 1. Delivery pacing (5 minutes)\n\nOpen every active insertion order and check the *Delivery* column against the *Days remaining* column. Anything under ninety percent pacing at the mid-flight mark is a red flag, and anything over one hundred and ten percent is worth investigating too — over-pacing often means bids are set too aggressively and the account will run out of budget early.\n\n> Over-delivery is not a win. It is a budgeting failure with a friendlier name.\n\nAt this stage I am not trying to fix anything. I am just building a list of IOs that need attention.\n\n## 2. Frequency caps and audience reach (7 minutes)\n\nThe two most common causes of quiet under-delivery are:\n\n- **Frequency caps too tight** — a cap of two per twenty-four hours can filter out huge chunks of the addressable pool by mid-morning.\n- **Audience segments too narrow** — a first-party segment intersected with a third-party segment intersected with a device filter often leaves a delivery pool of five hundred users a day.\n\nFor each flagged IO, I check the *Reach & frequency* report in DV360. If unique users delivered is far below the estimated reach, the caps or the audience logic is the culprit — not the bid.\n\n## 3. Creative rotation (5 minutes)\n\nIn *Creatives → Performance*, sort by impressions descending. If one creative is taking more than sixty percent of impressions in a multi-creative line item, DV360's optimiser has quietly picked a winner and is starving the others. Sometimes that is fine. Often, the \"winner\" is fatigued and its click-through rate is trending down week over week.\n\nForce even rotation for a control period, and let the numbers tell the truth.\n\n## 4. Floodlight and conversion attribution (8 minutes)\n\nThis is where most audits find real money.\n\n- Are Floodlight tags firing on the right pages?\n- Are custom variables passing through correctly, or arriving as `undefined`?\n- Is the conversion window still set to the default thirty days, when the client's own CRM says the median lead-to-close is closer to nine?\n\nI keep a small snippet handy for quick sanity checks in the browser console:\n\n```javascript\n// Check what Floodlight sees on this page\nconsole.log(window.__floodlight_variables__ || 'no floodlight object found');\n```\n\nBad tags do not announce themselves. They just quietly attribute the wrong conversions to the wrong campaigns until someone gets fired.\n\n## 5. Bid strategy sanity check (5 minutes)\n\nOnly *now* — with pacing, audience, creative, and tracking checked — do I look at bids. Specifically:\n\n1. Is the bidding strategy aligned to the KPI the client actually cares about? A CPM target when the goal is CPA leads to predictable disappointment.\n2. Is the *Bid multiplier* stack doing anything useful, or is it a decade of well-meaning tweaks that cancel each other out?\n3. Is the *Optimise for viewability* toggle on, when it does not need to be — and paying a twenty percent premium for it?\n\n## Wrapping up\n\nAt the end of thirty minutes I have a one-page diagnostic that reads something like:\n\n- Two IOs pacing under sixty percent — frequency caps and audience narrowing.\n- One creative dominating impressions across three IOs — pause and rotate.\n- Floodlight custom variable `order_value` returning `undefined` on the checkout page — engineering fix.\n- Bid multiplier stack has redundant device and geo layers — simplify.\n\nNone of this is glamorous. It is not the deck the client was expecting. But it is what the account actually needs. And the good clients — the ones worth working with — always prefer a diagnosis to a strategy.",
+    "imageURL": "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=1400&auto=format&fit=crop&q=80",
+    "postLink": "",
+    "tags": ["DV360", "Audit", "Diagnostics", "Programmatic"],
+    "published": true,
+    "created_at": "2026-07-09T06:36:45.299766+00:00",
+    "updated_at": "2026-07-09T06:36:45.299766+00:00"
+  },
+  {
+    "slug": "under-pacing-diagnostic-not-bid",
+    "title": "Why Under-Pacing Is a Diagnostic Problem, Not a Bid Problem",
+    "date": "March 12, 2025",
+    "excerpt": "Everyone reaches for bid multipliers first. In most cases, the fix is upstream — in inventory, frequency caps or creative rotation. Here's the audit I run before I touch a single bid.",
+    "body": "# Full article body\n\nAdd markdown content here.",
+    "imageURL": "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=900&auto=format&fit=crop&q=75",
+    "postLink": "",
+    "tags": ["DV360", "Pacing", "Diagnostics"],
+    "published": true,
+    "created_at": "2026-07-08T07:21:10.854930+00:00",
+    "updated_at": "2026-07-08T07:21:10.854930+00:00"
+  },
+  {
+    "slug": "reading-dv360-report-as-media-planner",
+    "title": "Reading a DV360 Report Like a Media Planner, Not an Ops Person",
+    "date": "February 4, 2025",
+    "excerpt": "The default columns tell you the campaign ran. The right columns tell you whether it worked. A short guide to the seven views I keep on my second monitor.",
+    "body": "# Full article body\n\nAdd markdown content here.",
+    "imageURL": "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=900&auto=format&fit=crop&q=75",
+    "postLink": "",
+    "tags": ["DV360", "Reporting"],
+    "published": true,
+    "created_at": "2026-07-08T07:21:09.854930+00:00",
+    "updated_at": "2026-07-08T07:21:09.854930+00:00"
+  },
+  {
+    "slug": "floodlight-hygiene",
+    "title": "The Quiet Discipline of Floodlight Hygiene",
+    "date": "January 18, 2025",
+    "excerpt": "Bad tags don't announce themselves. They just quietly attribute the wrong conversions to the wrong campaigns until someone gets fired. A short primer on keeping your tracking house in order.",
+    "body": "# Full article body\n\nAdd markdown content here.",
+    "imageURL": "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=900&auto=format&fit=crop&q=75",
+    "postLink": "",
+    "tags": ["Floodlight", "Tracking"],
+    "published": true,
+    "created_at": "2026-07-08T07:21:08.854930+00:00",
+    "updated_at": "2026-07-08T07:21:08.854930+00:00"
+  }
+]

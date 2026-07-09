@@ -1238,8 +1238,9 @@
       ];
 
       // ► ARTICLES / JOURNAL POSTS
-      // Posts are managed via the admin dashboard at /admin.
-      // They are fetched at page load from /api/posts (public list of published posts only).
+      // Posts live in /posts/posts.json — no database, no backend.
+      // To add/edit/remove a post, just edit that file (then run
+      // `python3 scripts/build_blog.py` to regenerate the /blog/{slug}/ pages + sitemap).
       let portfolioPosts = [];
 
       /* ============================================================
@@ -1288,9 +1289,12 @@
 
       async function fetchPosts() {
         try {
-          const r = await fetch('/api/posts');
+          const r = await fetch('/posts/posts.json');
           if (!r.ok) return;
-          portfolioPosts = await r.json();
+          const all = await r.json();
+          portfolioPosts = all
+            .filter(p => p.published)
+            .sort((a, b) => new Date(b.date) - new Date(a.date));
         } catch (e) {
           console.warn('Failed to fetch posts:', e);
         }
