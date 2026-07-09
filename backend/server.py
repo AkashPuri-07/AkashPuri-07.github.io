@@ -22,6 +22,13 @@ from motor.motor_asyncio import AsyncIOMotorClient
 from pydantic import BaseModel, ConfigDict, Field
 from starlette.middleware.cors import CORSMiddleware
 
+from blog_renderer import (
+    write_post_file,
+    remove_post_file,
+    regenerate_all,
+    build_sitemap_urls,
+)
+
 # ---------------------------------------------------------------------------
 # Setup
 # ---------------------------------------------------------------------------
@@ -281,11 +288,51 @@ async def admin_get_post(post_id: str, _: User = Depends(require_admin)):
     return Post(**doc)
 
 
+async def _sync_blog_files() -> list:
+    """Regenerate every /blog/{slug}/index.html + sitemap based on current published posts.
+    Call after any create/update/delete/publish-toggle. Returns the published list."""
+    published = await db.posts.find({"published": True}, {"_id": 0}).sort("created_at", -1).to_list(1000)
+    regenerate_all(published)
+    _write_sitemap(published)
+    return published
+
+
+def _write_sitemap(published_posts: list) -> None:
+    """Regenerate /app/frontend/public/sitemap.xml so it always reflects current published posts."""
+    from pathlib import Path as _P
+    sitemap = _P("/app/frontend/public/sitemap.xml")
+    static_anchors = [
+        ("/", 1.0, "monthly"),
+        ("/#about", 0.8, "monthly"),
+        ("/#projects", 0.9, "monthly"),
+        ("/#skills", 0.6, "monthly"),
+        ("/#journal", 0.8, "weekly"),
+        ("/#contact", 0.7, "yearly"),
+    ]
+    blog_urls = build_sitemap_urls(published_posts)
+    lines = [
+        '<?xml version="1.0" encoding="UTF-8"?>',
+        "<!--",
+        "  TODO: When your real domain is live, prefix every <loc> below with",
+        "  your actual domain (e.g. https://akashpuri.com) — sitemap.xml spec requires",
+        "  absolute URLs. This file is auto-regenerated on every post save/delete.",
+        "-->",
+        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
+    ]
+    for path, prio, freq in static_anchors:
+        lines.append(f"  <url><loc>{path}</loc><changefreq>{freq}</changefreq><priority>{prio}</priority></url>")
+    for url in blog_urls:
+        lines.append(f'  <url><loc>{url}</loc><changefreq>monthly</changefreq><priority>0.75</priority></url>')
+    lines.append("</urlset>")
+    sitemap.write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+
 @api.post("/admin/posts", response_model=Post)
 async def admin_create_post(payload: PostInput, _: User = Depends(require_admin)):
     slug = await _next_available_slug(payload.slug)
     post = Post(slug=slug, **{k: v for k, v in payload.model_dump().items() if k != "slug"})
     await db.posts.insert_one(post.model_dump())
+    await _sync_blog_files()
     return post
 
 
@@ -300,14 +347,22 @@ async def admin_update_post(post_id: str, payload: PostInput, _: User = Depends(
     updates["updated_at"] = datetime.now(timezone.utc).isoformat()
     await db.posts.update_one({"id": post_id}, {"$set": updates})
     doc = await db.posts.find_one({"id": post_id}, {"_id": 0})
+    # If slug changed, remove the old file too.
+    if existing.get("slug") and existing["slug"] != slug:
+        remove_post_file(existing["slug"])
+    await _sync_blog_files()
     return Post(**doc)
 
 
 @api.delete("/admin/posts/{post_id}")
 async def admin_delete_post(post_id: str, _: User = Depends(require_admin)):
-    result = await db.posts.delete_one({"id": post_id})
-    if not result.deleted_count:
+    existing = await db.posts.find_one({"id": post_id}, {"_id": 0})
+    if not existing:
         raise HTTPException(status_code=404, detail="Post not found")
+    await db.posts.delete_one({"id": post_id})
+    if existing.get("slug"):
+        remove_post_file(existing["slug"])
+    await _sync_blog_files()
     return {"ok": True, "id": post_id}
 
 
@@ -482,6 +537,14 @@ async def seed_if_empty():
             docs.append(d)
         await db.posts.insert_many(docs)
         logger.info("Seeded %d default posts", len(docs))
+    # Always regenerate blog files + sitemap on startup so they mirror the DB.
+    try:
+        published = await db.posts.find({"published": True}, {"_id": 0}).sort("created_at", -1).to_list(1000)
+        regenerate_all(published)
+        _write_sitemap(published)
+        logger.info("Regenerated %d blog files + sitemap", len(published))
+    except Exception as e:
+        logger.exception("Blog regeneration failed at startup: %s", e)
 
 
 @app.on_event("shutdown")

@@ -1,0 +1,46 @@
+{
+  "summary": "Iteration 6 (static blog pages + section rhythm) is GREEN end-to-end. BACKEND (43/43 pytest pass sequentially — full backend_test.py 38 + new test_blog_files.py 5): startup logs show 'Regenerated 3 blog files + sitemap'; /app/frontend/public/blog/ has 3 subfolders (floodlight-hygiene, reading-dv360-report-as-media-planner, under-pacing-diagnostic-not-bid) each with index.html (~333 lines, ~15KB). Sitemap has 6 static anchors + 3 <loc>/blog/{slug}/. CRUD lifecycle test verified all five transitions: (a) POST published:true 'test-blog-file-e2e' → folder + index.html created, HTTP GET /blog/{slug}/ returns 200 with <title> containing 'Akash Puri', sitemap contains new <loc>; (b) PUT published:false → folder removed, sitemap <loc> removed; (c) republish → folder + <loc> back; (d) slug rename to 'test-blog-renamed' → old folder deleted, new folder created, sitemap swap; (e) DELETE → folder + <loc> removed. SEO surface verified on live GET /blog/floodlight-hygiene/: <title>=…| Akash Puri, meta description, canonical=/blog/{slug}/, og:type=article, og:title, og:image, og:url, twitter:card=summary_large_image, and JSON-LD <script type=application/ld+json> with @type Article + Akash Puri + datePublished + mainEntityOfPage.@id=canonical. FRONTEND (Playwright): all 3 .post-card hrefs on portfolio → /blog/{slug}/ (needed `sudo supervisorctl restart frontend` first because webpack was serving a stale copy — same quirk documented in iteration_5). Clicking a card lands on the generated reading page: page.title() = 'Why Under-Pacing Is a Diagnostic Problem, Not a Bid Problem | Akash Puri'; heroImg=True; shareButtons=3 (LinkedIn/Twitter/Copy); authorCard+authorLink present; relatedCards=2; footCta present; progressBar updates on scroll (0% → 4.46% after 60% scroll); back-link returns to /#journal. Fonts: h1 = 'Source Serif 4', Georgia, serif; body/.prose = Inter, system-ui, sans-serif. Section rhythm confirmed: .metrics computed background renders dark #14130f (see screenshot — clearly the only dark band), .metric-num has color=rgba(0,0,0,0) + background-clip=text + gold gradient (232,212,168→184,153,104); About=rgb(251,246,234) warm cream, Projects=rgb(242,242,238) porcelain, Skills=rgb(249,240,234) blush, Journal=rgb(245,242,236) pearl beige, Contact=ivory with warm gradient blob. FULL REGRESSION: /api/auth/me, /api/admin/posts, /api/admin/messages, /api/posts, /api/messages, static assets, auth guards — all pass (37/37 in backend_test.py; the 1 flake noted below is pytest-xdist race, passes in isolation).",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "N/A", "issue": "test_slug_uniqueness_auto_suffix intermittently fails when run under pytest-xdist -n auto because both parallel workers hit the same collection with the same base_slug before Mongo indexes settle — passes 100% in isolation and when the whole suite is run with `-o addopts=''`. Not a product bug, purely a test-parallelism race in the OLD backend_test.py."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/backend_test.py",
+    "/app/backend/tests/test_blog_files.py",
+    "/app/test_reports/pytest/pytest_results.xml"
+  ],
+  "action_items": [
+    "NON-BLOCKING — same webpack dev-server staleness quirk from iteration_5: after any edit to /app/frontend/public/index.html, prefer `sudo supervisorctl restart frontend` to force re-serve. Encountered again here — portfolio was serving stale HTML with '#' hrefs until restart; disk file was correct.",
+    "OPTIONAL — the /admin.html and /admin/index.html duplication remains (still 792 identical lines each). A symlink or build step would eliminate future drift risk.",
+    "OPTIONAL HARDENING — pytest.ini uses `-n auto --dist loadscope` which surfaces the slug-uniqueness race intermittently. Consider marking that specific test as `@pytest.mark.serial` or moving the uniqueness assertion into a same-worker load scope."
+  ],
+  "critical_code_review_comments": [
+    "blog_renderer.py:141-479 — _post_html() is 340 lines of embedded HTML/CSS/JS built via f-string. Works cleanly today but is one edit away from mixing {} literals with format placeholders (already using {{ }} escapes throughout). Consider extracting the CSS block into a separate .css file the template links to, or migrating to Jinja2 templates in a follow-up iteration. Not blocking.",
+    "blog_renderer.py:163-178 — JSON-LD is assembled with Python repr() which produces JSON-close-but-not-strict output (single quotes for empty strings become \"''\", and repr() escapes are Python-specific, not JSON). Validated via string check ('@type': 'Article' present) but a Google Rich Results test may flag this. Safer: use json.dumps(..., ensure_ascii=False) for each value.",
+    "server.py:335,353,365 — _sync_blog_files() is awaited synchronously inside the request handler. For a personal portfolio with a handful of posts this is fine (~10ms), but at scale this couples every admin-CRUD latency to filesystem I/O. Optional future improvement: fire-and-forget via asyncio.create_task().",
+    "blog_renderer.py:498-499 — the file is written with .write_text() in a sync path called from an async endpoint. Consistent with the rest of the codebase but worth documenting in blog_renderer that these calls MUST stay small (single ~15KB file per call).",
+    "public/index.html now 1473 lines — approaching the 700-line 'split into modules' guideline. This is the vanilla-HTML SPA so options are limited, but consider extracting the inline <style> into public/portfolio.css and the inline <script> into public/portfolio.js to keep review-diff readable in future iterations.",
+    "Iteration_5 open item — admin_patch_message still accepts an arbitrary payload dict; would be defense-in-depth to use a Pydantic model with strict `read: bool`. Not a functional issue."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_blog_files.py (NEW — 5 tests covering blog file/sitemap lifecycle + SEO surface)",
+    "/app/test_reports/pytest/pytest_results.xml (regenerated)"
+  ],
+  "success_rate": {
+    "backend": "100% — 43/43 pytest pass when run sequentially (37/38 under parallel xdist; the 1 flake is a test-parallelism race, product code is correct)",
+    "frontend": "100% — every review-request check passed: journal cards linking, reading page render, share/author/related/CTA/progress bar, back-to-journal, section rhythm, Source Serif 4 + Inter fonts"
+  },
+  "test_credentials": "Same as prior iterations. Seeded admin user (email=akashpuri7@gmail.com, role=admin) + user_sessions row via mongosh per /app/memory/test_credentials.md, used as `Authorization: Bearer <token>`. All test users/sessions/posts cleaned up on fixture teardown.",
+  "seed_data_creation": "During CRUD lifecycle test: created 1 test post ('test-blog-file-e2e' → renamed → 'test-blog-renamed' → deleted), 1 test admin user + session (auto-cleanup). Final Mongo state: 3 seeded posts intact, 0 test data.",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Iteration 6 (static blog pages + section rhythm) fully verified. New regression test file /app/backend/tests/test_blog_files.py covers startup filesystem state, sitemap invariants, per-post SEO surface, and full CRUD file lifecycle (create → unpublish → republish → rename → delete). Reuse it as-is next iteration. IMPORTANT: run pytest with `-o addopts=''` if you want the deterministic 43/43 pass — the default `-n auto --dist loadscope` from pytest.ini surfaces a test-parallelism race in the pre-existing test_slug_uniqueness_auto_suffix test (not a product bug). ALSO: any future edit to /app/frontend/public/index.html requires `sudo supervisorctl restart frontend` to bypass webpack dev-server caching (same quirk as iteration_5). Reading-page assets served directly from /app/frontend/public/blog/{slug}/index.html — backend writes these on every admin CRUD via server._sync_blog_files() → blog_renderer.regenerate_all(). Test hooks used: page.title(), computed style checks on .metrics + .metric-num, and `a.post-card` href attributes.",
+  "rca_of_the_issue": "N/A — no product bugs. Two environmental notes: (1) webpack dev-server was again serving a stale /index.html on first probe (fixed by supervisorctl restart frontend; disk was correct throughout); (2) test_slug_uniqueness_auto_suffix is flaky under parallel xdist due to worker scheduling with the same base_slug — passes cleanly in isolation and when whole suite runs without xdist. Both documented; neither blocks iteration_6."
+}

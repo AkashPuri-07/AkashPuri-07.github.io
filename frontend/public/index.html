@@ -142,6 +142,75 @@
         background: radial-gradient(circle, #e6d1e0 0%, transparent 60%);
       }
 
+      /* ============================================================
+         SECTION RHYTHM — alternating tones + one dark cinema pause
+         ============================================================ */
+      .about   { background: linear-gradient(to bottom, transparent, #fbf6ea 12%, #fbf6ea 88%, transparent); }
+      .about::before {
+        content: '';
+        position: absolute; inset: 0;
+        background-image: radial-gradient(rgba(20,19,15,0.055) 1px, transparent 1px);
+        background-size: 22px 22px;
+        opacity: 0.55; z-index: 0; pointer-events: none;
+      }
+
+      .projects { background: linear-gradient(to bottom, transparent, #f2f2ee 10%, #f2f2ee 90%, transparent); }
+      .projects::before {
+        content: '';
+        position: absolute; top: 0; right: -8%;
+        width: 42%; height: 100%;
+        background: linear-gradient(115deg, transparent 45%, rgba(184,153,104,0.14) 50%, transparent 55%);
+        z-index: 0; pointer-events: none;
+      }
+
+      .metrics {
+        background: linear-gradient(to bottom, transparent, #14130f 8%, #14130f 92%, transparent);
+        color: #f8f5ec;
+        position: relative;
+      }
+      .metrics::before {
+        content: '';
+        position: absolute; inset: 0;
+        background:
+          radial-gradient(circle at 20% 30%, rgba(212,180,122,0.18) 0%, transparent 45%),
+          radial-gradient(circle at 80% 70%, rgba(184,153,104,0.15) 0%, transparent 45%);
+        z-index: 0; pointer-events: none;
+      }
+      .metrics .metric-label { color: rgba(248,245,236,0.55); }
+      .metrics .metric-num { background: linear-gradient(135deg, #e8d4a8 0%, #d4b47a 50%, #b89968 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
+
+      .skills { background: linear-gradient(to bottom, transparent, #f9f0ea 10%, #f9f0ea 90%, transparent); }
+      .skills::before {
+        content: '';
+        position: absolute; top: 20%; right: -15vw;
+        width: 45vw; height: 45vw; border-radius: 50%;
+        background: radial-gradient(circle, rgba(230,201,193,0.55) 0%, transparent 60%);
+        filter: blur(80px); z-index: 0; pointer-events: none;
+      }
+
+      .journal { background: linear-gradient(to bottom, transparent, #f5f2ec 10%, #f5f2ec 90%, transparent); }
+      .journal::before {
+        content: '';
+        position: absolute; left: 8%; top: 12%; bottom: 12%;
+        width: 1px;
+        background: linear-gradient(to bottom, transparent, rgba(184,153,104,0.4) 20%, rgba(184,153,104,0.4) 80%, transparent);
+        z-index: 0; pointer-events: none;
+      }
+
+      .contact { position: relative; }
+      .contact::before {
+        content: '';
+        position: absolute; top: -10%; left: -10vw;
+        width: 40vw; height: 40vw; border-radius: 50%;
+        background: radial-gradient(circle, rgba(243,227,200,0.6) 0%, transparent 60%);
+        filter: blur(80px); z-index: 0; pointer-events: none;
+      }
+
+      section { position: relative; }
+      section > .wrap { position: relative; z-index: 1; }
+      /* Dark section text overrides */
+      .metrics .metric { color: #f8f5ec; }
+
       .wrap {
         max-width: 1240px;
         margin: 0 auto;
@@ -363,6 +432,20 @@
 
       .section-head { max-width: 720px; margin-bottom: 64px; }
       .section-title { margin-top: 12px; }
+
+      /* Section-specific eyebrow accents (all in the gold family — no rainbow) */
+      .about   .eyebrow { color: #8f7443; }               /* warm gold */
+      .projects .eyebrow { color: #a17845; }              /* burnt gold */
+      .metrics .eyebrow  { color: #d4b47a; }              /* champagne on dark */
+      .skills  .eyebrow { color: #b06a5a; }               /* rose gold */
+      .journal .eyebrow { color: #8f7443; }
+      .contact .eyebrow { color: #8f7443; }
+      .about   .eyebrow::before,
+      .projects .eyebrow::before,
+      .skills  .eyebrow::before,
+      .journal .eyebrow::before,
+      .contact .eyebrow::before { background: currentColor; }
+      .metrics .eyebrow::before { background: currentColor; }
 
       /* Glass card base */
       .glass {
@@ -915,6 +998,10 @@
     <!-- ==================== METRICS ==================== -->
     <section class="metrics">
       <div class="wrap">
+        <div class="section-head reveal" style="max-width:640px;">
+          <span class="eyebrow">By the numbers</span>
+          <h2 class="section-title" style="color:#f8f5ec;">Nine years, measured.</h2>
+        </div>
         <div class="metrics-grid">
           <div class="metric reveal">
             <div class="metric-num"><span class="count" data-target="9">0</span><span>+</span></div>
@@ -1181,8 +1268,10 @@
           grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:60px; color:var(--ink-3);">New pieces coming soon.</div>';
           return;
         }
-        grid.innerHTML = portfolioPosts.map(post => `
-          <a class="post-card reveal" href="${post.postLink || '#'}" data-tilt data-tilt-max="5" data-tilt-speed="600" data-tilt-glare data-tilt-max-glare="0.15">
+        grid.innerHTML = portfolioPosts.map(post => {
+          const href = (post.postLink && post.postLink !== '#') ? post.postLink : `/blog/${post.slug}/`;
+          return `
+          <a class="post-card reveal" href="${href}" data-tilt data-tilt-max="5" data-tilt-speed="600" data-tilt-glare data-tilt-max-glare="0.15">
             <div class="post-media">
               <img src="${post.imageURL}" alt="${post.title}" loading="lazy" />
             </div>
@@ -1193,7 +1282,7 @@
               <span class="post-link">Read the piece <span class="arrow">→</span></span>
             </div>
           </a>
-        `).join('');
+        `;}).join('');
       }
 
       async function fetchPosts() {
