@@ -1,6 +1,0 @@
-User-agent: *
-Allow: /
-
-# Once your real domain is live, uncomment and update the line below:
-# Sitemap: https://your-domain.com/sitemap.xml
-Sitemap: /sitemap.xml
