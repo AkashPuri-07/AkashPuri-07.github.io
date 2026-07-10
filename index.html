@@ -1376,7 +1376,13 @@
           });
           return;
         }
-        if (typeof gsap === 'undefined') return;
+        if (typeof gsap === 'undefined' || typeof ScrollTrigger === 'undefined') {
+     document.querySelectorAll('.reveal').forEach(el => {
+       el.style.opacity = 1;
+       el.style.transform = 'none';
+     });
+     return;
+   }
         gsap.registerPlugin(ScrollTrigger);
 
         // Hero headline: split words into an elegant clip-mask reveal
@@ -1455,6 +1461,15 @@
         initContactForm();
         initTilt();
         initAnimations();
+        setTimeout(() => {
+     document.querySelectorAll('.reveal').forEach(el => {
+       const opacity = window.getComputedStyle(el).opacity;
+       if (opacity === '0') {
+         el.style.opacity = 1;
+         el.style.transform = 'none';
+       }
+     });
+   }, 4000);
       });
     </script>
   </body>
