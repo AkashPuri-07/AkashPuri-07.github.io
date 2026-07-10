@@ -1462,14 +1462,14 @@
         initTilt();
         initAnimations();
         setTimeout(() => {
-     document.querySelectorAll('.reveal').forEach(el => {
-       const opacity = window.getComputedStyle(el).opacity;
-       if (opacity === '0') {
-         el.style.opacity = 1;
-         el.style.transform = 'none';
-       }
-     });
-   }, 4000);
+         document.querySelectorAll('.reveal').forEach(el => {
+           const opacity = window.getComputedStyle(el).opacity;
+           if (opacity === '0') {
+             el.style.opacity = 1;
+             el.style.transform = 'none';
+           }
+         });
+       }, 4000);
       });
     </script>
   </body>
