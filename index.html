@@ -1105,6 +1105,7 @@
 
         <div class="contact-grid">
           <form class="contact-form glass reveal" id="contactForm">
+            <input type="text" name="_gotcha" style="display:none !important" tabindex="-1" autocomplete="off" />
             <div class="form-field">
               <label for="name">Name</label>
               <input type="text" id="name" name="name" placeholder="Your name" required />
@@ -1330,12 +1331,13 @@
           e.preventDefault();
           const data = Object.fromEntries(new FormData(form).entries());
           if (!data.name || !data.email || !data.message) return;
+          if (data._gotcha) return;
           btn.disabled = true;
           btn.textContent = 'Sending…';
           try {
-            const r = await fetch('/api/messages', {
+            const r = await fetch('https://formspree.io/f/mrenzzqo', {
               method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
+              headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
               body: JSON.stringify(data),
             });
             if (!r.ok) throw new Error('bad-status');
