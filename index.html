@@ -69,6 +69,8 @@
       href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500;1,9..144,600&family=Inter:wght@300;400;500;600;700&display=swap"
       rel="stylesheet"
     />
+    <!-- Tabler icons (line-art icons for work-card steppers & tags) -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.1.0/tabler-icons.min.css" />
 
     <style>
       /* ============================================================
@@ -548,6 +550,7 @@
         will-change: transform;
         transition: box-shadow 0.5s var(--ease), border-color 0.4s var(--ease);
         overflow: hidden;
+        display: flex; flex-direction: column;
       }
       .card::before {
         content: '';
@@ -572,59 +575,100 @@
       .card:hover::after { transform: translateX(100%); }
       .card:hover { box-shadow: var(--shadow-lift); border-color: rgba(184, 153, 104, 0.35); }
 
-      .card-top-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
-      .card-title {
-        font-family: 'Fraunces', serif;
-        font-size: 1.35rem; font-weight: 700;
-        color: var(--ink);
+      /* header: eyebrow + badge row */
+      .card-eyebrow-row {
+        display: flex; align-items: center; justify-content: space-between;
+        gap: 12px; margin-bottom: 12px;
+      }
+      .card-eyebrow {
+        font-size: 0.66rem; font-weight: 600; letter-spacing: 0.14em;
+        text-transform: uppercase; color: var(--ink-3);
       }
       .badge {
         background: rgba(184, 153, 104, 0.12);
         color: var(--gold-deep);
-        font-size: 0.68rem; font-weight: 600;
+        font-size: 0.66rem; font-weight: 600;
         letter-spacing: 0.1em; text-transform: uppercase;
         padding: 6px 12px;
         border-radius: 999px;
         white-space: nowrap;
       }
-      .card-tags { display: flex; flex-wrap: wrap; gap: 8px; margin: 16px 0; }
+      .card-title {
+        font-family: 'Inter', system-ui, -apple-system, sans-serif;
+        font-size: 1.4rem; font-weight: 600; line-height: 1.2;
+        color: var(--ink); letter-spacing: -0.01em;
+        text-transform: none;
+        margin: 0 0 18px;
+      }
+
+      /* taxonomy pills */
+      .card-tags { display: flex; flex-wrap: wrap; gap: 10px; margin: 0 0 24px; }
       .tag {
-        font-size: 0.72rem; font-weight: 500;
-        color: var(--ink-3);
-        padding: 4px 10px;
-        border: 1px solid var(--line);
-        border-radius: 999px;
+        display: inline-flex; align-items: center; gap: 7px;
+        font-size: 0.78rem; font-weight: 500; color: #fff;
+        padding: 8px 14px; border-radius: 10px; white-space: nowrap;
       }
-      .card-bullets {
-        list-style: none; padding: 0; margin: 0 0 24px;
+      .tag i { font-size: 1rem; }
+      .tag.blue { background: #4a6d8c; }
+      .tag.teal { background: #4b8074; }
+
+      /* numbered stepper */
+      .card-steps { margin: 0 0 24px; }
+      .card-step {
+        display: grid;
+        grid-template-columns: 34px 30px 1fr;
+        gap: 14px; align-items: start;
+        position: relative; padding-bottom: 20px;
       }
-      .card-bullets li {
-        position: relative; padding-left: 20px;
-        margin-bottom: 10px;
-        font-size: 0.92rem; color: var(--ink-2);
+      .card-step:last-child { padding-bottom: 0; }
+      .card-step:not(:last-child)::before {
+        content: ''; position: absolute;
+        left: 16px; top: 36px; bottom: 0;
+        width: 2px; background: var(--line-strong);
       }
-      .card-bullets li::before {
-        content: ''; position: absolute; left: 0; top: 12px;
-        width: 10px; height: 1px; background: var(--gold-deep);
+      .step-num {
+        width: 34px; height: 34px; border-radius: 50%;
+        background: rgba(184, 153, 104, 0.1);
+        display: flex; align-items: center; justify-content: center;
+        font-family: 'Fraunces', 'Playfair Display', Georgia, serif; font-size: 1rem; font-weight: 500;
+        font-variation-settings: "opsz" 144, "SOFT" 30;
+        color: var(--gold-deep); z-index: 1;
       }
+      .step-icon { font-size: 1.7rem; color: var(--gold); margin-top: 2px; }
+      .step-body { padding-top: 4px; }
+      .step-text { font-size: 0.9rem; line-height: 1.5; color: var(--ink-2); }
+      .step-platform {
+        display: inline-block; margin-top: 8px;
+        font-size: 0.72rem; color: var(--ink-3);
+        background: rgba(20, 19, 15, 0.04);
+        padding: 4px 11px; border-radius: 999px;
+      }
+
+      /* impact box */
       .card-stat {
-        display: flex; align-items: baseline; gap: 12px;
-        padding-top: 20px;
-        border-top: 1px solid var(--line);
+        margin-top: auto;
+        background: var(--bg-elev);
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        padding: 20px; text-align: center;
       }
       .card-stat-num {
-        font-family: 'Fraunces', serif;
-        font-size: 2rem; font-weight: 700;
+        display: block;
+        font-family: 'Fraunces', 'Playfair Display', Georgia, serif;
+        font-size: 2.85rem; font-weight: 500; line-height: 1;
+        letter-spacing: -0.02em;
+        font-variation-settings: "opsz" 144, "SOFT" 30;
         background: var(--gold-grad);
         -webkit-background-clip: text;
         background-clip: text;
-        color: transparent;
+        color: transparent; margin-bottom: 6px;
       }
       .card-stat-label {
-        font-size: 0.82rem;
+        display: block;
+        font-size: 0.74rem; font-weight: 500;
         color: var(--ink-3);
         text-transform: uppercase;
-        letter-spacing: 0.06em;
+        letter-spacing: 0.08em;
       }
 
       /* ---------- METRICS ---------- */
@@ -879,6 +923,76 @@
   "description": "Akash Puri is a professional Display Account Manager specializing in programmatic advertising strategies, floodlight hygiene, and advanced tracking configurations."
 }
 </script>
+    <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "ItemList",
+  "name": "Selected Work — Programmatic & Display Advertising",
+  "description": "Case studies of programmatic and display advertising engagements led by Akash Puri across CRM, cloud, defense & aerospace, telecom and global brand accounts.",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "item": {
+        "@type": "CreativeWork",
+        "name": "Global CRM & Database Provider — Campaign Trafficking & QA",
+        "about": "CM360 campaign trafficking and QA for a global CRM and database provider, with 99% trafficking accuracy.",
+        "keywords": "CM360, Campaign Manager 360, campaign trafficking, QA, ad operations"
+      }
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "item": {
+        "@type": "CreativeWork",
+        "name": "Global Cloud & Web Services Provider — Multi-DSP Delivery",
+        "about": "Day-of-delivery campaign operations across DV360 and The Trade Desk for a cloud and web services vertical.",
+        "keywords": "DV360, The Trade Desk, programmatic, DSP, campaign delivery"
+      }
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "item": {
+        "@type": "CreativeWork",
+        "name": "Defense & Aerospace Manufacturer — Global Ad Operations",
+        "about": "Ad operations and quality-checked trafficking for a defense and aerospace client across multiple global regions.",
+        "keywords": "ad operations, trafficking, taxonomy, tracking, global campaigns"
+      }
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "item": {
+        "@type": "CreativeWork",
+        "name": "APAC Internet Service Provider — Pacing Recovery",
+        "about": "Diagnosed and recovered a chronically under-pacing insertion order for an APAC ISP, restoring 100% pacing in DV360.",
+        "keywords": "DV360, pacing, insertion order, optimisation, delivery"
+      }
+    },
+    {
+      "@type": "ListItem",
+      "position": 5,
+      "item": {
+        "@type": "CreativeWork",
+        "name": "Global Brand Portfolio — Display, Video & Floodlight",
+        "about": "60+ insertion orders across Display, Video and TrueView for global luxury, FMCG and automotive brands, with custom Floodlight tagging.",
+        "keywords": "Floodlight, Display, Video, TrueView, insertion orders, reporting"
+      }
+    },
+    {
+      "@type": "ListItem",
+      "position": 6,
+      "item": {
+        "@type": "CreativeWork",
+        "name": "Dentsu Enterprise Accounts — Client-Side Display Strategy",
+        "about": "Client-side point of contact managing DV360 campaigns and Floodlight implementation for enterprise brand-awareness programmes.",
+        "keywords": "DV360, brand awareness, display strategy, Floodlight, enterprise accounts"
+      }
+    }
+  ]
+}
+</script>
   </head>
   <body>
     <!-- ==================== TOP NAVIGATION ==================== -->
@@ -946,7 +1060,7 @@
 
         <div class="bio-card glass reveal">
           <p>Akash Puri is a programmatic and display advertising specialist with over nine years of experience turning data into decisions. His career spans both sides of the media business: agency floors at Merkle Sokrati and Machintel Corporation, and client-facing strategy at Dentsu, where he now manages display advertising and brand awareness programmes for enterprise accounts.</p>
-          <p>That dual vantage point shapes how he works. He has trafficked and quality-checked campaigns for advertisers as large as Oracle, Amazon Web Services and Northrop Grumman, coordinated with regional teams across time zones to keep delivery on track, and sat across the table from clients translating business goals into media strategy. Whether the job is fixing an under-pacing insertion order or presenting a quarter's worth of results to a brand's leadership, his approach stays the same: watch the data closely, optimise early, and communicate clearly.</p>
+          <p>That dual vantage point shapes how he works. He has trafficked and quality-checked campaigns for advertisers spanning global CRM, cloud infrastructure and defense &amp; aerospace, coordinated with regional teams across time zones to keep delivery on track, and sat across the table from clients translating business goals into media strategy. Whether the job is fixing an under-pacing insertion order or presenting a quarter's worth of results to a brand's leadership, his approach stays the same: watch the data closely, optimise early, and communicate clearly.</p>
           <p>Akash holds an MBA in Marketing from Sinhgad Business School and is certified across DV360, Google Campaign Manager 360, Google Ads and HubSpot. He is currently based in Pune, India.</p>
         </div>
 
@@ -1015,6 +1129,16 @@
 
         <div class="project-grid" id="projectGrid">
           <!-- Cards are rendered dynamically from the `projects` array in JS -->
+          <noscript>
+            <ul style="list-style:none;padding:0;margin:0;color:var(--ink-2);line-height:1.7;">
+              <li><strong>Global CRM &amp; Database Provider</strong> (Agency · Performance, Ad Operations) — CM360 campaign trafficking and QA; 99% trafficking accuracy.</li>
+              <li><strong>Global Cloud &amp; Web Services Provider</strong> (Agency · Performance, Programmatic) — Day-of-delivery operations across DV360 and The Trade Desk; 2 DSPs in parallel.</li>
+              <li><strong>Defense &amp; Aerospace Manufacturer</strong> (Agency · Brand, Performance) — Ad operations and quality-checked trafficking across 3+ global regions.</li>
+              <li><strong>APAC Internet Service Provider</strong> (Agency · Performance, Pacing Recovery) — Recovered a chronically under-pacing IO in DV360 to 100% pacing.</li>
+              <li><strong>Global Brand Portfolio</strong> (Agency · Brand, Display, Video) — 60+ insertion orders across Display, Video and TrueView with custom Floodlight tagging.</li>
+              <li><strong>Dentsu Enterprise Accounts</strong> (Client Side · Brand, Strategy) — Client-side display strategy and DV360 campaign management; 2.5+ years ongoing partnership.</li>
+            </ul>
+          </noscript>
         </div>
       </div>
     </section>
@@ -1186,79 +1310,97 @@
       // ► PROJECTS: campaigns and account work
       const projects = [
         {
-          title: 'Oracle',
+          eyebrow: 'Industry Case Study',
+          title: 'Global CRM & Database Provider',
           badge: 'Agency',
-          tags: ['Performance', 'Ad Operations'],
+          tags: [ { t: 'Performance', c: 'blue', i: 'chart-line' }, { t: 'Ad Operations', c: 'teal', i: 'server-cog' } ],
           bullets: [
-            'Ran trafficking and QA across a portfolio of CM360 campaigns for a global CRM and database provider.',
+            'Ran trafficking and QA across a portfolio of CM360 campaigns.',
             'Coordinated with regional teams worldwide to troubleshoot delivery and tagging issues in Campaign Manager.',
             'Reported KPIs and delivery metrics used by account managers to optimise spend across platforms.'
           ],
+          bulletIcons: ['calendar-check', 'affiliate', 'device-analytics'],
+          platform: 'CM360 Platform',
           statNum: '99%',
           statLabel: 'campaign trafficking accuracy',
           categories: ['performance', 'agency']
         },
         {
-          title: 'Amazon Web Services',
+          eyebrow: 'Industry Case Study',
+          title: 'Global Cloud & Web Services Provider',
           badge: 'Agency',
-          tags: ['Performance', 'Programmatic'],
+          tags: [ { t: 'Performance', c: 'blue', i: 'chart-line' }, { t: 'Programmatic', c: 'teal', i: 'broadcast' } ],
           bullets: [
             'Managed day-of-delivery campaign operations across DV360 and The Trade Desk for a web solutions vertical.',
             'Analysed campaign performance data to guide a stronger media strategy quarter over quarter.',
             'Kept multi-platform delivery on pace through proactive monitoring and optimisation.'
           ],
+          bulletIcons: ['calendar-clock', 'chart-arrows-vertical', 'activity-heartbeat'],
+          platform: 'DV360 · The Trade Desk',
           statNum: '2',
           statLabel: 'DSPs managed in parallel',
           categories: ['performance', 'agency']
         },
         {
-          title: 'Northrop Grumman',
+          eyebrow: 'Industry Case Study',
+          title: 'Defense & Aerospace Manufacturer',
           badge: 'Agency',
-          tags: ['Brand', 'Performance'],
+          tags: [ { t: 'Brand', c: 'blue', i: 'diamond' }, { t: 'Performance', c: 'teal', i: 'chart-line' } ],
           bullets: [
             'Supported ad operations for a defense, space and machinery client across multiple global regions.',
             'Kept regional points of contact aligned on the latest taxonomy and tracking updates.',
             'Delivered consistent, quality-checked trafficking for a highly regulated, high-visibility account.'
           ],
+          bulletIcons: ['world-cog', 'sitemap', 'shield-check'],
+          platform: null,
           statNum: '3+',
           statLabel: 'global regions coordinated',
           categories: ['performance', 'brand', 'agency']
         },
         {
-          title: 'ViewQwest',
+          eyebrow: 'Industry Case Study',
+          title: 'APAC Internet Service Provider',
           badge: 'Agency',
-          tags: ['Performance', 'Pacing Recovery'],
+          tags: [ { t: 'Performance', c: 'blue', i: 'chart-line' }, { t: 'Pacing Recovery', c: 'teal', i: 'gauge' } ],
           bullets: [
             'Diagnosed a chronically under-pacing insertion order for a Singapore-based ISP client.',
             'Introduced a daily optimisation cadence to correct delivery in DV360.',
             'Brought the campaign back to full, on-target pacing within the flight window.'
           ],
+          bulletIcons: ['stethoscope', 'refresh', 'target-arrow'],
+          platform: 'DV360',
           statNum: '100%',
           statLabel: 'pacing recovered',
           categories: ['performance', 'agency']
         },
         {
+          eyebrow: 'Industry Case Study',
           title: 'Global Brand Portfolio',
           badge: 'Agency',
-          tags: ['Brand', 'Display', 'Video'],
+          tags: [ { t: 'Brand', c: 'blue', i: 'diamond' }, { t: 'Display', c: 'teal', i: 'photo' }, { t: 'Video', c: 'blue', i: 'video' } ],
           bullets: [
-            'Set up 60+ insertion orders across Display, Video and TrueView for Armani, Nestlé, Red Bull, Michelin and more.',
+            'Set up 60+ insertion orders across Display, Video and TrueView for global luxury, FMCG and automotive brands.',
             'Built customised Floodlight tags with custom variables to capture URL-level detail.',
             'Delivered performance reports across 12 IOs with pivot tables and creative- and device-level insight.'
           ],
+          bulletIcons: ['clipboard-list', 'tags', 'report-analytics'],
+          platform: 'Floodlight',
           statNum: '60+',
           statLabel: 'insertion orders launched',
           categories: ['brand', 'performance', 'agency']
         },
         {
+          eyebrow: 'Client-Side Engagement',
           title: 'Dentsu Enterprise Accounts',
           badge: 'Client Side',
-          tags: ['Brand', 'Strategy'],
+          tags: [ { t: 'Brand', c: 'blue', i: 'diamond' }, { t: 'Strategy', c: 'teal', i: 'bulb' } ],
           bullets: [
             'Primary point of contact for enterprise clients — translating business goals into display strategy.',
             'Build and manage DV360 campaigns with precise audience targeting for reach and brand awareness.',
             'Resolve ad delivery, tracking and Floodlight implementation issues to keep campaigns running smoothly.'
           ],
+          bulletIcons: ['users', 'target', 'tool'],
+          platform: 'DV360',
           statNum: '2.5+ yrs',
           statLabel: 'ongoing client partnership',
           categories: ['brand', 'client']
@@ -1278,12 +1420,21 @@
         const grid = document.getElementById('projectGrid');
         grid.innerHTML = projects.map(p => `
           <article class="card reveal" data-cat="${p.categories.join(' ')}" data-tilt data-tilt-max="6" data-tilt-speed="600" data-tilt-glare data-tilt-max-glare="0.2">
-            <div class="card-top-row">
-              <div class="card-title">${p.title}</div>
+            <div class="card-eyebrow-row">
+              <span class="card-eyebrow">${p.eyebrow}</span>
               <span class="badge">${p.badge}</span>
             </div>
-            <div class="card-tags">${p.tags.map(t => `<span class="tag">${t}</span>`).join('')}</div>
-            <ul class="card-bullets">${p.bullets.map(b => `<li>${b}</li>`).join('')}</ul>
+            <h3 class="card-title">${p.title}</h3>
+            <div class="card-tags">${p.tags.map(tag => `<span class="tag ${tag.c}"><i class="ti ti-${tag.i}" aria-hidden="true"></i>${tag.t}</span>`).join('')}</div>
+            <div class="card-steps">${p.bullets.map((b, idx) => `
+              <div class="card-step">
+                <span class="step-num">${idx + 1}</span>
+                <i class="step-icon ti ti-${p.bulletIcons[idx]}" aria-hidden="true"></i>
+                <div class="step-body">
+                  <span class="step-text">${b}</span>
+                  ${idx === 0 && p.platform ? `<span class="step-platform">${p.platform}</span>` : ''}
+                </div>
+              </div>`).join('')}</div>
             <div class="card-stat">
               <span class="card-stat-num">${p.statNum}</span>
               <span class="card-stat-label">${p.statLabel}</span>
